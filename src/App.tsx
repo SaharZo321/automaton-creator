@@ -7,6 +7,7 @@ import { GuideModal } from './components/GuideModal';
 import { RenamePopover } from './components/RenamePopover';
 import { TransitionEditor } from './components/TransitionEditor';
 import { ToastProvider, useToast } from './components/Toast';
+import { ContextMenuOverlay, buildStateMenuItems, buildTransitionMenuItems } from './components/ContextMenuOverlay';
 import { useAutomaton } from './hooks/useAutomaton';
 import { usePersistence } from './hooks/usePersistence';
 import { useKeyboard } from './hooks/useKeyboard';
@@ -36,6 +37,10 @@ function AppInner() {
     selectAll,
     deleteSelected,
     duplicateSelected,
+    setStartState,
+    toggleAcceptState,
+    deleteStates,
+    deleteTransitions,
   } = useAutomaton();
 
   const svgRef = useRef<SVGSVGElement>(null);
@@ -69,6 +74,13 @@ function AppInner() {
     id: string; position: { x: number; y: number };
   } | null>(null);
 
+  const [contextMenu, setContextMenu] = useState<{
+    type: 'state' | 'transition';
+    id: string;
+    x: number;
+    y: number;
+  } | null>(null);
+
   const [containerSize, setContainerSize] = useState({ width: 800, height: 600 });
   const [viewBox, setViewBoxLocal] = useState({ x: 0, y: 0, zoom: 1 });
 
@@ -93,6 +105,9 @@ function AppInner() {
 
   const handleViewBoxChange = useCallback((vb: { x: number; y: number; zoom: number }) => {
     setViewBoxLocal(vb);
+    setRenamePopover(null);
+    setEditingTransition(null);
+    setPendingTransitionSymbolFor(null);
   }, []);
 
   const warnings = validateAutomaton(state);
@@ -184,7 +199,7 @@ function AppInner() {
     if (!pendingTransitionFrom) return;
 
     const fromId = pendingTransitionFrom;
-    setPendingTransitionFrom(null);
+    setPendingTransitionFrom('__selecting_source__');
 
     const fromState = state.states.find((s) => s.id === fromId);
     const toState = state.states.find((s) => s.id === toId);
@@ -228,17 +243,17 @@ function AppInner() {
     }
   }, [renamePopover, renameState]);
 
-  // Context menu handlers - handled via right-click on states
-  const handleContextMenuState = useCallback((_e: React.MouseEvent, id: string) => {
-    if (!state.selectedIds.has(id)) {
-      selectIds([id]);
-    }
+  // Context menu handlers
+  const handleContextMenuState = useCallback((e: React.MouseEvent, id: string) => {
+    e.preventDefault();
+    if (!state.selectedIds.has(id)) selectIds([id]);
+    setContextMenu({ type: 'state', id, x: e.clientX, y: e.clientY });
   }, [state.selectedIds, selectIds]);
 
-  const handleContextMenuTransition = useCallback((_e: React.MouseEvent, id: string) => {
-    if (!state.selectedIds.has(id)) {
-      selectIds([id]);
-    }
+  const handleContextMenuTransition = useCallback((e: React.MouseEvent, id: string) => {
+    e.preventDefault();
+    if (!state.selectedIds.has(id)) selectIds([id]);
+    setContextMenu({ type: 'transition', id, x: e.clientX, y: e.clientY });
   }, [state.selectedIds, selectIds]);
 
   useKeyboard({
@@ -382,6 +397,52 @@ function AppInner() {
         onSave={handleSaveEditedTransition}
         onClose={() => setEditingTransition(null)}
       />
+
+      {contextMenu && (() => {
+        if (contextMenu.type === 'state') {
+          const s = state.states.find((st) => st.id === contextMenu.id);
+          if (!s) return null;
+          return (
+            <ContextMenuOverlay
+              x={contextMenu.x}
+              y={contextMenu.y}
+              onClose={() => setContextMenu(null)}
+              items={buildStateMenuItems({
+                stateId: s.id,
+                isStart: s.isStart,
+                isAccept: s.isAccept,
+                onSetStart: (id) => setStartState(id),
+                onToggleAccept: (id) => toggleAcceptState(id),
+                onRename: (id) => {
+                  setContextMenu(null);
+                  const svgEl = svgRef.current;
+                  if (!svgEl) return;
+                  const rect = svgEl.getBoundingClientRect();
+                  const screenX = (s.x - viewBox.x) * viewBox.zoom + rect.left;
+                  const screenY = (s.y - viewBox.y) * viewBox.zoom + rect.top;
+                  setRenamePopover({ id, position: { x: screenX, y: screenY } });
+                },
+                onDelete: (id) => deleteStates([id]),
+              })}
+            />
+          );
+        }
+        return (
+          <ContextMenuOverlay
+            x={contextMenu.x}
+            y={contextMenu.y}
+            onClose={() => setContextMenu(null)}
+            items={buildTransitionMenuItems({
+              transitionId: contextMenu.id,
+              onEdit: (id) => {
+                setContextMenu(null);
+                setEditingTransition({ id, position: { x: contextMenu.x, y: contextMenu.y } });
+              },
+              onDelete: (id) => deleteTransitions([id]),
+            })}
+          />
+        );
+      })()}
     </div>
   );
 }

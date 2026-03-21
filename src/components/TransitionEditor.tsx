@@ -29,7 +29,8 @@ export const TransitionEditor: React.FC<TransitionEditorProps> = ({
         inputRef.current?.select();
       }, 50);
     }
-  }, [open, currentSymbols]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [open]); // intentionally omit currentSymbols — only reset when editor opens, not on re-renders
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();

@@ -44,10 +44,20 @@ export const RenamePopover: React.FC<RenamePopoverProps> = ({
 
   if (!open) return null;
 
+  const popoverW = 224;
+  const popoverH = 210;
+  const margin = 8;
+  const rawLeft = position.x - popoverW / 2;
+  const rawTop = position.y + 40;
+  const left = Math.max(margin, Math.min(rawLeft, window.innerWidth - popoverW - margin));
+  const top = rawTop + popoverH + margin > window.innerHeight
+    ? position.y - popoverH - 10
+    : rawTop;
+
   return (
     <div
       className="fixed z-50"
-      style={{ left: position.x - 100, top: position.y + 40 }}
+      style={{ left, top }}
     >
       <div className="bg-white dark:bg-slate-800 rounded-xl shadow-xl border border-slate-200 dark:border-slate-700 p-4 w-56">
         <form onSubmit={handleSubmit}>

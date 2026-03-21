@@ -76,6 +76,7 @@ export const Canvas: React.FC<CanvasProps> = ({
   } | null>(null);
 
   const didMoveRef = useRef(false);
+  const justCompletedTransitionRef = useRef(false);
 
   const unreachableIds = getUnreachableIds(state);
 
@@ -325,6 +326,7 @@ export const Canvas: React.FC<CanvasProps> = ({
 
       // Completing a transition (selecting destination)
       if (pendingTransitionFrom !== null) {
+        justCompletedTransitionRef.current = true;
         onCompleteTransition(id);
         return;
       }
@@ -355,6 +357,7 @@ export const Canvas: React.FC<CanvasProps> = ({
 
   const handleSvgDoubleClick = useCallback(
     (e: React.MouseEvent<SVGSVGElement>) => {
+      if (pendingTransitionFrom !== null || isSelectingTransitionSource) return;
       const svgPt = screenToSvg(e.clientX, e.clientY);
       const hit = findStateAt(svgPt);
       if (!hit) {
@@ -367,6 +370,11 @@ export const Canvas: React.FC<CanvasProps> = ({
   const handleStateDoubleClick = useCallback(
     (e: React.MouseEvent, id: string) => {
       e.stopPropagation();
+      if (justCompletedTransitionRef.current) {
+        justCompletedTransitionRef.current = false;
+        return;
+      }
+      if (pendingTransitionFrom !== null || isSelectingTransitionSource) return;
       const svgEl = svgRef.current;
       if (!svgEl) return;
       const rect = svgEl.getBoundingClientRect();
@@ -447,6 +455,7 @@ export const Canvas: React.FC<CanvasProps> = ({
         onMouseUp={handleMouseUp}
         onMouseLeave={handleMouseLeave}
         onDoubleClick={handleSvgDoubleClick}
+        onContextMenu={(e) => e.preventDefault()}
         style={{ cursor: pendingTransitionFrom ? 'crosshair' : 'default' }}
       >
         <defs>
