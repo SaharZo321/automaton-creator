@@ -426,7 +426,7 @@ export const Canvas: React.FC<CanvasProps> = ({
       (t) => t.from === transition.to && t.to === transition.from
     );
     if (reverse) {
-      return transition.id < reverse.id ? 0.4 : -0.4;
+      return 0.4;
     }
     return 0;
   };
