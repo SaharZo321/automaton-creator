@@ -13,7 +13,7 @@ interface StateCircleProps {
 }
 
 
-const ForeignLabel: React.FC<{ name: string; radius: number }> = ({ name, radius }) => {
+const ForeignLabel: React.FC<{ name: string }> = ({ name }) => {
   const ref = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -22,8 +22,7 @@ const ForeignLabel: React.FC<{ name: string; radius: number }> = ({ name, radius
     }
   }, [name]);
 
-  const labelWidth = getStateRx(name) * 2 - 8;
-  const size = labelWidth;
+  const size = getStateRx(name) * 2 - 8;
 
   return (
     <foreignObject
@@ -110,7 +109,7 @@ export const StateCircle: React.FC<StateCircleProps> = ({
 
       {/* Label */}
       {isLatex(state.name) ? (
-        <ForeignLabel name={state.name} radius={rx} />
+        <ForeignLabel name={state.name} />
       ) : (
         <text
           textAnchor="middle"
