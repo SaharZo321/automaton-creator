@@ -8,6 +8,7 @@ import {
 import type { AutomatonType } from '../types/automaton';
 import { FileMenu } from './FileMenu';
 import { ExportMenu } from './ExportMenu';
+import { AlphabetEditor } from './AlphabetEditor';
 import { ThemeToggle } from './ThemeToggle';
 import type { SaveEntry } from '../hooks/usePersistence';
 import type { AutomatonState } from '../types/automaton';
@@ -15,6 +16,8 @@ import type { AutomatonState } from '../types/automaton';
 interface ToolbarProps {
   automatonType: AutomatonType;
   onTypeChange: (type: AutomatonType) => void;
+  alphabet: string[];
+  onAlphabetChange: (alphabet: string[]) => void;
   canUndo: boolean;
   canRedo: boolean;
   onUndo: () => void;
@@ -97,6 +100,8 @@ function TooltipBtn({
 export const Toolbar: React.FC<ToolbarProps> = ({
   automatonType,
   onTypeChange,
+  alphabet,
+  onAlphabetChange,
   canUndo,
   canRedo,
   onUndo,
@@ -177,6 +182,11 @@ export const Toolbar: React.FC<ToolbarProps> = ({
           </Select.Content>
         </Select.Portal>
       </Select.Root>
+
+      <div className="w-px h-6 bg-slate-200 dark:bg-slate-700 mx-1" />
+
+      {/* Alphabet editor */}
+      <AlphabetEditor alphabet={alphabet} onChange={onAlphabetChange} />
 
       <div className="w-px h-6 bg-slate-200 dark:bg-slate-700 mx-1" />
 

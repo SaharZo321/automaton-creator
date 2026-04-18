@@ -41,6 +41,7 @@ function AppInner() {
     toggleAcceptState,
     deleteStates,
     deleteTransitions,
+    setAlphabet,
   } = useAutomaton();
 
   const svgRef = useRef<SVGSVGElement>(null);
@@ -296,6 +297,8 @@ function AppInner() {
       <Toolbar
         automatonType={state.type}
         onTypeChange={setType}
+        alphabet={state.alphabet}
+        onAlphabetChange={setAlphabet}
         canUndo={canUndo}
         canRedo={canRedo}
         onUndo={undo}
