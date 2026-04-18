@@ -32,6 +32,19 @@ export const TransitionEditor: React.FC<TransitionEditorProps> = ({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open]); // intentionally omit currentSymbols — only reset when editor opens, not on re-renders
 
+  const insertEpsilon = () => {
+    const input = inputRef.current;
+    if (!input) return;
+    const start = input.selectionStart ?? value.length;
+    const end = input.selectionEnd ?? value.length;
+    const newValue = value.slice(0, start) + 'ε' + value.slice(end);
+    setValue(newValue);
+    setTimeout(() => {
+      input.focus();
+      input.setSelectionRange(start + 1, start + 1);
+    }, 0);
+  };
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     const symbols = value
@@ -46,8 +59,6 @@ export const TransitionEditor: React.FC<TransitionEditorProps> = ({
 
   if (!open) return null;
 
-  const epsilonHint = automatonType === 'NFA-e' ? ' (use ε or e for epsilon)' : '';
-
   return (
     <div
       className="fixed z-50"
@@ -56,22 +67,34 @@ export const TransitionEditor: React.FC<TransitionEditorProps> = ({
       <div className="bg-white dark:bg-slate-800 rounded-xl shadow-xl border border-slate-200 dark:border-slate-700 p-4 w-60">
         <form onSubmit={handleSubmit}>
           <label className="text-xs font-medium text-slate-500 dark:text-slate-400 block mb-1.5">
-            Transition symbol(s){epsilonHint}
+            Transition symbol(s)
           </label>
-          <input
-            ref={inputRef}
-            type="text"
-            value={value}
-            onChange={(e) => setValue(e.target.value)}
-            onKeyDown={(e) => {
-              if (e.key === 'Escape') {
-                e.stopPropagation();
-                onClose();
-              }
-            }}
-            className="w-full px-3 py-2 text-sm rounded-lg border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-blue-500"
-            placeholder="a, b, ε"
-          />
+          <div className="flex gap-1.5 items-center">
+            <input
+              ref={inputRef}
+              type="text"
+              value={value}
+              onChange={(e) => setValue(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === 'Escape') {
+                  e.stopPropagation();
+                  onClose();
+                }
+              }}
+              className="flex-1 min-w-0 px-3 py-2 text-sm rounded-lg border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              placeholder="a, b, ε"
+            />
+            {automatonType === 'NFA-e' && (
+              <button
+                type="button"
+                onClick={insertEpsilon}
+                title="Insert ε"
+                className="px-2.5 py-2 text-sm rounded-lg border border-slate-200 dark:border-slate-600 bg-slate-50 dark:bg-slate-700 hover:bg-blue-50 hover:border-blue-300 dark:hover:bg-slate-600 text-slate-700 dark:text-slate-300 font-medium transition-colors flex-shrink-0"
+              >
+                ε
+              </button>
+            )}
+          </div>
           <p className="text-xs text-slate-400 dark:text-slate-500 mt-1">
             Separate multiple symbols with commas
           </p>
