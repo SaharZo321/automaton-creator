@@ -1,6 +1,6 @@
 import React from 'react';
 import type { Transition, StateNode } from '../../types/automaton';
-import { STATE_RADIUS } from '../../constants';
+import { STATE_RADIUS, getStateRx } from '../../constants';
 import { getSelfLoopPath } from '../../lib/geometry';
 
 interface SelfLoopProps {
@@ -20,7 +20,7 @@ export const SelfLoop: React.FC<SelfLoopProps> = ({
   onContextMenu,
   onClick,
 }) => {
-  const pathD = getSelfLoopPath(state.x, state.y, STATE_RADIUS);
+  const pathD = getSelfLoopPath(state.x, state.y, getStateRx(state.name), STATE_RADIUS);
   const label = transition.symbols.join(', ');
   const strokeColor = isSelected ? '#3b82f6' : '#475569';
 

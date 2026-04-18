@@ -1,6 +1,6 @@
 import dagre from 'dagre';
 import type { StateNode, Transition } from '../types/automaton';
-import { STATE_RADIUS } from '../constants';
+import { STATE_RADIUS, getStateRx } from '../constants';
 
 export function computeLayout(
   states: StateNode[],
@@ -21,7 +21,7 @@ export function computeLayout(
 
   for (const state of states) {
     g.setNode(state.id, {
-      width: STATE_RADIUS * 2,
+      width: getStateRx(state.name) * 2,
       height: STATE_RADIUS * 2,
     });
   }

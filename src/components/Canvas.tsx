@@ -1,6 +1,6 @@
 import React, { useRef, useState, useCallback, useEffect } from 'react';
 import type { AutomatonState, StateNode, Transition } from '../types/automaton';
-import { STATE_RADIUS, MIN_ZOOM, MAX_ZOOM } from '../constants';
+import { STATE_RADIUS, MIN_ZOOM, MAX_ZOOM, getStateRx } from '../constants';
 import { hitTestState } from '../lib/geometry';
 import { getUnreachableIds } from '../lib/validation';
 import { GridPattern } from './canvas/GridPattern';
@@ -99,7 +99,7 @@ export const Canvas: React.FC<CanvasProps> = ({
     (svgPt: { x: number; y: number }): StateNode | null => {
       for (let i = state.states.length - 1; i >= 0; i--) {
         const s = state.states[i];
-        if (hitTestState(svgPt, s, STATE_RADIUS)) return s;
+        if (hitTestState(svgPt, s)) return s;
       }
       return null;
     },
@@ -564,10 +564,11 @@ export const Canvas: React.FC<CanvasProps> = ({
           const fromState = state.states.find((s) => s.id === pendingTransitionFrom);
           if (!fromState) return null;
           return (
-            <circle
+            <ellipse
               cx={fromState.x}
               cy={fromState.y}
-              r={STATE_RADIUS + 8}
+              rx={getStateRx(fromState.name) + 8}
+              ry={STATE_RADIUS + 8}
               fill="none"
               stroke="#f59e0b"
               strokeWidth={2}

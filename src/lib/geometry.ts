@@ -1,4 +1,5 @@
 import type { StateNode } from '../types/automaton';
+import { STATE_RADIUS, getStateRx } from '../constants';
 
 export function getEdgePath(
   from: { x: number; y: number },
@@ -25,20 +26,22 @@ export function getEdgePath(
   return `M ${from.x} ${from.y} Q ${cpX} ${cpY} ${to.x} ${to.y}`;
 }
 
-export function getSelfLoopPath(cx: number, cy: number, radius: number): string {
-  const loopRadius = radius * 0.9;
+export function getSelfLoopPath(cx: number, cy: number, rx: number, ry: number = rx): string {
+  const loopRadius = ry * 0.9;
   const startAngle = -Math.PI / 4;
   const endAngle = -3 * Math.PI / 4;
 
-  const startX = cx + radius * Math.cos(startAngle);
-  const startY = cy + radius * Math.sin(startAngle);
-  const endX = cx + radius * Math.cos(endAngle);
-  const endY = cy + radius * Math.sin(endAngle);
+  const startX = cx + rx * Math.cos(startAngle);
+  const startY = cy + ry * Math.sin(startAngle);
+  const endX = cx + rx * Math.cos(endAngle);
+  const endY = cy + ry * Math.sin(endAngle);
 
-  const cp1X = cx + (radius + loopRadius * 2) * Math.cos(startAngle - Math.PI / 6);
-  const cp1Y = cy + (radius + loopRadius * 2) * Math.sin(startAngle - Math.PI / 6);
-  const cp2X = cx + (radius + loopRadius * 2) * Math.cos(endAngle + Math.PI / 6);
-  const cp2Y = cy + (radius + loopRadius * 2) * Math.sin(endAngle + Math.PI / 6);
+  const cp1Angle = startAngle - Math.PI / 6;
+  const cp2Angle = endAngle + Math.PI / 6;
+  const cp1X = cx + (rx + loopRadius * 2) * Math.cos(cp1Angle);
+  const cp1Y = cy + (ry + loopRadius * 2) * Math.sin(cp1Angle);
+  const cp2X = cx + (rx + loopRadius * 2) * Math.cos(cp2Angle);
+  const cp2Y = cy + (ry + loopRadius * 2) * Math.sin(cp2Angle);
 
   return `M ${startX} ${startY} C ${cp1X} ${cp1Y} ${cp2X} ${cp2Y} ${endX} ${endY}`;
 }
@@ -55,12 +58,13 @@ export function getMidpoint(
 
 export function hitTestState(
   point: { x: number; y: number },
-  state: StateNode,
-  radius: number
+  state: StateNode
 ): boolean {
+  const rx = getStateRx(state.name);
+  const ry = STATE_RADIUS;
   const dx = point.x - state.x;
   const dy = point.y - state.y;
-  return dx * dx + dy * dy <= radius * radius;
+  return (dx / rx) * (dx / rx) + (dy / ry) * (dy / ry) <= 1;
 }
 
 export function getEdgeLabelPosition(
@@ -97,19 +101,30 @@ export function getEdgeLabelPosition(
   };
 }
 
+function ellipseIntersect(
+  cx: number, cy: number, rx: number, ry: number,
+  nx: number, ny: number, outward: boolean
+): { x: number; y: number } {
+  const t = 1 / Math.sqrt((nx / rx) * (nx / rx) + (ny / ry) * (ny / ry));
+  const sign = outward ? 1 : -1;
+  return { x: cx + sign * nx * t, y: cy + sign * ny * t };
+}
+
 export function getEdgeEndpoints(
   from: StateNode,
   to: StateNode,
-  radius: number,
   curvature: number = 0.3
 ): { fromPt: { x: number; y: number }; toPt: { x: number; y: number } } {
+  const ry = STATE_RADIUS;
+  const fromRx = getStateRx(from.name);
+  const toRx = getStateRx(to.name);
+
   const dx = to.x - from.x;
   const dy = to.y - from.y;
   const dist = Math.sqrt(dx * dx + dy * dy);
 
   if (dist === 0) return { fromPt: { x: from.x, y: from.y }, toPt: { x: to.x, y: to.y } };
 
-  // Perpendicular for curve
   const px = -dy / dist;
   const py = dx / dist;
   const midX = (from.x + to.x) / 2;
@@ -118,25 +133,21 @@ export function getEdgeEndpoints(
   const cpX = midX + px * offset;
   const cpY = midY + py * offset;
 
-  // Direction from source to cp
   const dFromX = cpX - from.x;
   const dFromY = cpY - from.y;
   const dFromLen = Math.sqrt(dFromX * dFromX + dFromY * dFromY);
 
-  // Direction from cp to target
   const dToX = to.x - cpX;
   const dToY = to.y - cpY;
   const dToLen = Math.sqrt(dToX * dToX + dToY * dToY);
 
-  const fromPt = {
-    x: from.x + (dFromLen > 0 ? (dFromX / dFromLen) * radius : 0),
-    y: from.y + (dFromLen > 0 ? (dFromY / dFromLen) * radius : 0),
-  };
+  const fromPt = dFromLen > 0
+    ? ellipseIntersect(from.x, from.y, fromRx, ry, dFromX / dFromLen, dFromY / dFromLen, true)
+    : { x: from.x, y: from.y };
 
-  const toPt = {
-    x: to.x - (dToLen > 0 ? (dToX / dToLen) * radius : 0),
-    y: to.y - (dToLen > 0 ? (dToY / dToLen) * radius : 0),
-  };
+  const toPt = dToLen > 0
+    ? ellipseIntersect(to.x, to.y, toRx, ry, dToX / dToLen, dToY / dToLen, false)
+    : { x: to.x, y: to.y };
 
   return { fromPt, toPt };
 }

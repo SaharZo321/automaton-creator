@@ -1,6 +1,6 @@
 import React, { useRef, useEffect } from 'react';
 import type { StateNode } from '../../types/automaton';
-import { STATE_RADIUS } from '../../constants';
+import { STATE_RADIUS, getStateRx } from '../../constants';
 import { isLatex, renderLatex } from '../../lib/latex';
 
 interface StateCircleProps {
@@ -12,6 +12,7 @@ interface StateCircleProps {
   onContextMenu: (e: React.MouseEvent, id: string) => void;
 }
 
+
 const ForeignLabel: React.FC<{ name: string; radius: number }> = ({ name, radius }) => {
   const ref = useRef<HTMLDivElement>(null);
 
@@ -21,7 +22,8 @@ const ForeignLabel: React.FC<{ name: string; radius: number }> = ({ name, radius
     }
   }, [name]);
 
-  const size = radius * 2 - 8;
+  const labelWidth = getStateRx(name) * 2 - 8;
+  const size = labelWidth;
 
   return (
     <foreignObject
@@ -56,7 +58,8 @@ export const StateCircle: React.FC<StateCircleProps> = ({
   onDoubleClick,
   onContextMenu,
 }) => {
-  const radius = STATE_RADIUS;
+  const ry = STATE_RADIUS;
+  const rx = getStateRx(state.name);
   const opacity = isUnreachable ? 0.4 : 1;
 
   return (
@@ -69,8 +72,9 @@ export const StateCircle: React.FC<StateCircleProps> = ({
     >
       {/* Selection highlight */}
       {isSelected && (
-        <circle
-          r={radius + 5}
+        <ellipse
+          rx={rx + 5}
+          ry={ry + 5}
           fill="none"
           stroke="#3b82f6"
           strokeWidth={2}
@@ -78,9 +82,10 @@ export const StateCircle: React.FC<StateCircleProps> = ({
         />
       )}
 
-      {/* Main circle */}
-      <circle
-        r={radius}
+      {/* Main ellipse */}
+      <ellipse
+        rx={rx}
+        ry={ry}
         className={`
           ${isSelected
             ? 'fill-blue-50 dark:fill-blue-950 stroke-blue-500'
@@ -92,10 +97,11 @@ export const StateCircle: React.FC<StateCircleProps> = ({
         strokeWidth={2}
       />
 
-      {/* Accept state double circle */}
+      {/* Accept state double ellipse */}
       {state.isAccept && (
-        <circle
-          r={radius - 5}
+        <ellipse
+          rx={rx - 5}
+          ry={ry - 5}
           fill="none"
           stroke={isSelected ? '#3b82f6' : '#10b981'}
           strokeWidth={2}
@@ -104,7 +110,7 @@ export const StateCircle: React.FC<StateCircleProps> = ({
 
       {/* Label */}
       {isLatex(state.name) ? (
-        <ForeignLabel name={state.name} radius={radius} />
+        <ForeignLabel name={state.name} radius={rx} />
       ) : (
         <text
           textAnchor="middle"

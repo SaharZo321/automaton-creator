@@ -1,6 +1,5 @@
 import React from 'react';
 import type { Transition, StateNode } from '../../types/automaton';
-import { STATE_RADIUS } from '../../constants';
 import { getEdgePath, getEdgeEndpoints, getEdgeLabelPosition } from '../../lib/geometry';
 
 interface TransitionEdgeProps {
@@ -24,7 +23,7 @@ export const TransitionEdge: React.FC<TransitionEdgeProps> = ({
   onContextMenu,
   onClick,
 }) => {
-  const { fromPt, toPt } = getEdgeEndpoints(fromState, toState, STATE_RADIUS, curvature);
+  const { fromPt, toPt } = getEdgeEndpoints(fromState, toState, curvature);
   const pathD = getEdgePath(fromPt, toPt, curvature);
   const labelPos = getEdgeLabelPosition(fromPt, toPt, curvature);
   const label = transition.symbols.join(', ');

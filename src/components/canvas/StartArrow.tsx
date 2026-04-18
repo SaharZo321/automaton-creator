@@ -1,6 +1,6 @@
 import React from 'react';
 import type { StateNode } from '../../types/automaton';
-import { STATE_RADIUS } from '../../constants';
+import { getStateRx } from '../../constants';
 
 interface StartArrowProps {
   state: StateNode;
@@ -8,9 +8,10 @@ interface StartArrowProps {
 
 export const StartArrow: React.FC<StartArrowProps> = ({ state }) => {
   const arrowLength = 40;
-  const startX = state.x - STATE_RADIUS - arrowLength;
+  const rx = getStateRx(state.name);
+  const startX = state.x - rx - arrowLength;
   const startY = state.y;
-  const endX = state.x - STATE_RADIUS;
+  const endX = state.x - rx;
   const endY = state.y;
 
   return (

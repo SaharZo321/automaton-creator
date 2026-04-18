@@ -1,6 +1,6 @@
 import { useState, useCallback, useRef } from 'react';
 import type { StateNode } from '../types/automaton';
-import { MIN_ZOOM, MAX_ZOOM, STATE_RADIUS } from '../constants';
+import { MIN_ZOOM, MAX_ZOOM, STATE_RADIUS, getStateRx } from '../constants';
 
 interface ViewBox {
   x: number;
@@ -72,8 +72,8 @@ export function useViewBox(initial: ViewBox) {
       }
 
       const padding = 80;
-      const minX = Math.min(...states.map((s) => s.x)) - STATE_RADIUS;
-      const maxX = Math.max(...states.map((s) => s.x)) + STATE_RADIUS;
+      const minX = Math.min(...states.map((s) => s.x - getStateRx(s.name)));
+      const maxX = Math.max(...states.map((s) => s.x + getStateRx(s.name)));
       const minY = Math.min(...states.map((s) => s.y)) - STATE_RADIUS;
       const maxY = Math.max(...states.map((s) => s.y)) + STATE_RADIUS;
 
