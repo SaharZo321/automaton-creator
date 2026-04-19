@@ -124,18 +124,28 @@ export const Canvas: React.FC<CanvasProps> = ({
     const onWheel = (e: WheelEvent) => {
       e.preventDefault();
       const rect = svg.getBoundingClientRect();
-      const delta = e.deltaY > 0 ? 0.9 : 1.1;
 
-      onViewBoxChange((() => {
+      // ctrlKey is set by browsers for pinch gestures and Ctrl+scroll → zoom
+      // plain two-finger scroll has ctrlKey = false → pan
+      if (e.ctrlKey) {
+        const delta = e.deltaY > 0 ? 0.9 : 1.1;
         const newZoom = Math.min(MAX_ZOOM, Math.max(MIN_ZOOM, viewBox.zoom * delta));
         const cursorX = e.clientX - rect.left;
         const cursorY = e.clientY - rect.top;
         const svgX = viewBox.x + cursorX / viewBox.zoom;
         const svgY = viewBox.y + cursorY / viewBox.zoom;
-        const newX = svgX - cursorX / newZoom;
-        const newY = svgY - cursorY / newZoom;
-        return { x: newX, y: newY, zoom: newZoom };
-      })());
+        onViewBoxChange({
+          x: svgX - cursorX / newZoom,
+          y: svgY - cursorY / newZoom,
+          zoom: newZoom,
+        });
+      } else {
+        onViewBoxChange({
+          x: viewBox.x + e.deltaX / viewBox.zoom,
+          y: viewBox.y + e.deltaY / viewBox.zoom,
+          zoom: viewBox.zoom,
+        });
+      }
     };
 
     svg.addEventListener('wheel', onWheel, { passive: false });
