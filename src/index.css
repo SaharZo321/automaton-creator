@@ -16,3 +16,36 @@ body {
   display: flex;
   flex-direction: column;
 }
+
+.styled-scrollbar {
+  scrollbar-color: #cbd5e1 transparent;
+}
+
+.dark .styled-scrollbar {
+  scrollbar-color: #334155 transparent;
+}
+
+.styled-scrollbar::-webkit-scrollbar {
+  width: 10px;
+}
+
+.styled-scrollbar::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.styled-scrollbar::-webkit-scrollbar-thumb {
+  background-color: #cbd5e1;
+  border-radius: 6px;
+}
+
+.styled-scrollbar::-webkit-scrollbar-thumb:hover {
+  background-color: #94a3b8;
+}
+
+.dark .styled-scrollbar::-webkit-scrollbar-thumb {
+  background-color: #334155;
+}
+
+.dark .styled-scrollbar::-webkit-scrollbar-thumb:hover {
+  background-color: #475569;
+}

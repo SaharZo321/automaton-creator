@@ -3,7 +3,8 @@ import * as Dialog from '@radix-ui/react-dialog';
 import {
   X, MousePointer, Move, Edit2,
   Download, Grid, HelpCircle,
-  Plus, Link, Settings, Keyboard
+  Plus, Link, Settings, Keyboard,
+  Spline, Type
 } from 'lucide-react';
 
 interface GuideModalProps {
@@ -13,7 +14,8 @@ interface GuideModalProps {
 
 const shortcuts = [
   { category: 'Navigation', items: [
-    { keys: ['Scroll'], desc: 'Zoom in/out' },
+    { keys: ['Two-finger scroll'], desc: 'Pan canvas' },
+    { keys: ['Pinch', 'Ctrl+Scroll'], desc: 'Zoom in/out' },
     { keys: ['Middle-click drag'], desc: 'Pan canvas' },
     { keys: ['Space + Drag'], desc: 'Pan canvas' },
     { keys: ['F'], desc: 'Fit view to all states' },
@@ -44,18 +46,20 @@ const shortcuts = [
 const features = [
   { icon: Plus, title: 'Create States', desc: 'Double-click on empty canvas to create a state. First state becomes the start state automatically.' },
   { icon: Link, title: 'Add Transitions', desc: 'Click the "Add Transition" button, then click source → destination state. Set the symbol in the popover.' },
-  { icon: Edit2, title: 'LaTeX Labels', desc: 'State names support LaTeX: type $q_0$ or $q_{even}$ to render with KaTeX.' },
+  { icon: Spline, title: 'Draggable Transitions', desc: 'Select a transition and drag the handle at its midpoint to adjust the curve. Self-loop handles rotate the loop around the state.' },
+  { icon: Edit2, title: 'LaTeX Labels', desc: 'State names and transition symbols (in NFA/NFA-ε modes) support LaTeX: wrap in $...$ e.g. $q_0$ or $\\sigma$.' },
+  { icon: Type, title: 'Alphabet (Σ)', desc: 'Configure the alphabet via the Σ button in the toolbar. Used to detect missing transitions in DFA mode.' },
   { icon: MousePointer, title: 'Context Menu', desc: 'Right-click any state to set start, toggle accept, rename, or delete.' },
   { icon: Settings, title: 'Auto-Layout', desc: 'Click "Auto-layout" to automatically arrange states using the dagre algorithm.' },
   { icon: Grid, title: 'Snap to Grid', desc: 'Toggle grid snapping with G key or toolbar button for precise placement.' },
-  { icon: Move, title: 'Zoom & Pan', desc: 'Use scroll wheel to zoom, middle-click or Space+drag to pan the canvas.' },
+  { icon: Move, title: 'Zoom & Pan', desc: 'Trackpad: two-finger scroll to pan, pinch to zoom. Mouse: scroll wheel zooms, middle-click or Space+drag to pan.' },
   { icon: Download, title: 'Export', desc: 'Export as PNG (2x resolution), SVG, or JSON. Import JSON to restore automata.' },
 ];
 
 const tutorial = [
   { step: 1, title: 'Create a state', desc: 'Double-click anywhere on the canvas. A circle appears with name "q0" — this is automatically the start state.' },
   { step: 2, title: 'Name your state', desc: 'Double-click the state to rename it. Try "$q_0$" for LaTeX rendering. The live preview shows how it will look.' },
-  { step: 3, title: 'Add more states & transitions', desc: 'Create more states, then click "Add Transition" in the toolbar. Click source state, then destination state.' },
+  { step: 3, title: 'Add more states & transitions', desc: 'Create more states, then click "Add Transition" in the toolbar. Click source state, then destination state. In NFA-ε mode use the ε button to insert epsilon quickly.' },
   { step: 4, title: 'Set start and accept states', desc: 'Right-click any state to set it as the start state or toggle its accept status (double circle).' },
   { step: 5, title: 'Export your automaton', desc: 'Use the Export menu to download as PNG or SVG, or File menu to save/load as JSON.' },
 ];
@@ -81,7 +85,7 @@ export const GuideModal: React.FC<GuideModalProps> = ({ open, onClose }) => {
             </Dialog.Close>
           </div>
 
-          <div className="flex-1 overflow-y-auto p-6 space-y-10">
+          <div className="flex-1 overflow-y-auto p-6 space-y-10 styled-scrollbar">
             {/* Quick Start Tutorial */}
             <section>
               <h2 className="text-lg font-semibold text-slate-900 dark:text-slate-100 mb-4 flex items-center gap-2">
