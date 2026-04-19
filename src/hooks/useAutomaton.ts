@@ -17,7 +17,7 @@ const initialState: AutomatonState = {
 };
 
 export function useAutomaton() {
-  const { state, setState, undo, redo, canUndo, canRedo } = useHistory(initialState);
+  const { state, setState, setPresent, commitDrag, undo, redo, canUndo, canRedo } = useHistory(initialState);
 
   const snapToGrid = useCallback((val: number): number => {
     return Math.round(val / GRID_SIZE) * GRID_SIZE;
@@ -84,34 +84,44 @@ export function useAutomaton() {
     [setState]
   );
 
-  const moveState = useCallback(
-    (id: string, x: number, y: number, snap = false) => {
-      const snappedX = snap ? snapToGrid(x) : x;
-      const snappedY = snap ? snapToGrid(y) : y;
-      setState((prev) => ({
+  // Silent move: updates position without adding to undo history (used during drag)
+  const moveStateSilent = useCallback(
+    (id: string, x: number, y: number) => {
+      setPresent((prev) => ({
         ...prev,
-        states: prev.states.map((s) =>
-          s.id === id ? { ...s, x: snappedX, y: snappedY } : s
-        ),
+        states: prev.states.map((s) => s.id === id ? { ...s, x, y } : s),
       }));
     },
-    [setState, snapToGrid]
+    [setPresent]
   );
 
-  const moveStateImmediate = useCallback(
-    (id: string, x: number, y: number, snap = false, updateHistory = true) => {
-      const snappedX = snap ? snapToGrid(x) : x;
-      const snappedY = snap ? snapToGrid(y) : y;
-      if (updateHistory) {
-        setState((prev) => ({
-          ...prev,
-          states: prev.states.map((s) =>
-            s.id === id ? { ...s, x: snappedX, y: snappedY } : s
-          ),
-        }));
-      }
+  const moveManyStatesSilent = useCallback(
+    (moves: Array<{ id: string; x: number; y: number }>) => {
+      setPresent((prev) => ({
+        ...prev,
+        states: prev.states.map((s) => {
+          const m = moves.find((mv) => mv.id === s.id);
+          return m ? { ...s, x: m.x, y: m.y } : s;
+        }),
+      }));
     },
-    [setState, snapToGrid]
+    [setPresent]
+  );
+
+  // Commit a completed drag: pushes the pre-drag snapshot to history, applies snap
+  const commitDraggedStates = useCallback(
+    (snapshot: AutomatonState, moves: Array<{ id: string; x: number; y: number }>, snap = false) => {
+      const next: AutomatonState = {
+        ...snapshot,
+        states: snapshot.states.map((s) => {
+          const m = moves.find((mv) => mv.id === s.id);
+          if (!m) return s;
+          return { ...s, x: snap ? snapToGrid(m.x) : m.x, y: snap ? snapToGrid(m.y) : m.y };
+        }),
+      };
+      commitDrag(snapshot, next);
+    },
+    [commitDrag, snapToGrid]
   );
 
   const renameState = useCallback(
@@ -374,22 +384,6 @@ export function useAutomaton() {
     });
   }, [setState, getNextStateName]);
 
-  const moveManyStates = useCallback(
-    (moves: Array<{ id: string; x: number; y: number }>, snap = false) => {
-      setState((prev) => ({
-        ...prev,
-        states: prev.states.map((s) => {
-          const move = moves.find((m) => m.id === s.id);
-          if (!move) return s;
-          const x = snap ? snapToGrid(move.x) : move.x;
-          const y = snap ? snapToGrid(move.y) : move.y;
-          return { ...s, x, y };
-        }),
-      }));
-    },
-    [setState, snapToGrid]
-  );
-
   const getMinimumRadius = useCallback(() => STATE_RADIUS, []);
 
   return {
@@ -400,9 +394,9 @@ export function useAutomaton() {
     canRedo,
     addState,
     deleteStates,
-    moveState,
-    moveStateImmediate,
-    moveManyStates,
+    moveStateSilent,
+    moveManyStatesSilent,
+    commitDraggedStates,
     renameState,
     setStartState,
     toggleAcceptState,

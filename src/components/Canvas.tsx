@@ -17,8 +17,9 @@ interface CanvasProps {
   snapToGrid: boolean;
   svgRef: React.RefObject<SVGSVGElement | null>;
   onAddState: (x: number, y: number, snap: boolean) => void;
-  onMoveState: (id: string, x: number, y: number, snap: boolean) => void;
-  onMoveManyStates: (moves: Array<{ id: string; x: number; y: number }>, snap: boolean) => void;
+  onMoveStateSilent: (id: string, x: number, y: number) => void;
+  onMoveManyStatesSilent: (moves: Array<{ id: string; x: number; y: number }>) => void;
+  onCommitDraggedStates: (snapshot: AutomatonState, moves: Array<{ id: string; x: number; y: number }>, snap: boolean) => void;
   onSelectIds: (ids: string[]) => void;
   onToggleSelect: (id: string) => void;
   onClearSelection: () => void;
@@ -43,8 +44,9 @@ export const Canvas: React.FC<CanvasProps> = ({
   snapToGrid,
   svgRef,
   onAddState,
-  onMoveState,
-  onMoveManyStates,
+  onMoveStateSilent,
+  onMoveManyStatesSilent,
+  onCommitDraggedStates,
   onSelectIds,
   onToggleSelect,
   onClearSelection,
@@ -79,6 +81,7 @@ export const Canvas: React.FC<CanvasProps> = ({
 
   const didMoveRef = useRef(false);
   const justCompletedTransitionRef = useRef(false);
+  const dragStartSnapshotRef = useRef<AutomatonState | null>(null);
 
   const draggingTransitionRef = useRef<{ id: string; type: 'curve' | 'loop' } | null>(null);
   const [transitionDragPreview, setTransitionDragPreview] = useState<{
@@ -246,20 +249,18 @@ export const Canvas: React.FC<CanvasProps> = ({
         const dy = svgPt.y - dragStartSvg.current.y;
 
         if (state.selectedIds.size > 1 && state.selectedIds.has(dragStateId.current)) {
-          // Move all selected states
           const moves = state.states
             .filter((s) => state.selectedIds.has(s.id))
             .map((s) => {
               const off = dragGroupOffsets.current.get(s.id) ?? { x: 0, y: 0 };
               return { id: s.id, x: off.x + dx, y: off.y + dy };
             });
-          onMoveManyStates(moves, false);
+          onMoveManyStatesSilent(moves);
         } else {
-          onMoveState(
+          onMoveStateSilent(
             dragStateId.current,
             dragStartState.current.x + dx,
-            dragStartState.current.y + dy,
-            false
+            dragStartState.current.y + dy
           );
         }
         return;
@@ -276,7 +277,7 @@ export const Canvas: React.FC<CanvasProps> = ({
         });
       }
     },
-    [viewBox, onViewBoxChange, screenToSvg, state, onMoveState, onMoveManyStates]
+    [viewBox, onViewBoxChange, screenToSvg, state, onMoveStateSilent, onMoveManyStatesSilent]
   );
 
   const handleMouseUp = useCallback(
@@ -302,32 +303,24 @@ export const Canvas: React.FC<CanvasProps> = ({
       }
 
       if (isDraggingState.current && dragStateId.current) {
-        // Finalize drag - apply snap if needed
-        if (didMoveRef.current && snapToGrid) {
+        if (didMoveRef.current && dragStartSnapshotRef.current) {
           const svgPt = screenToSvg(e.clientX, e.clientY);
           const dx = svgPt.x - dragStartSvg.current.x;
           const dy = svgPt.y - dragStartSvg.current.y;
+          const snapshot = dragStartSnapshotRef.current;
 
-          if (state.selectedIds.size > 1 && state.selectedIds.has(dragStateId.current)) {
-            const moves = state.states
-              .filter((s) => state.selectedIds.has(s.id))
-              .map((s) => {
-                const off = dragGroupOffsets.current.get(s.id) ?? { x: 0, y: 0 };
-                return { id: s.id, x: off.x + dx, y: off.y + dy };
-              });
-            onMoveManyStates(moves, true);
-          } else {
-            onMoveState(
-              dragStateId.current,
-              dragStartState.current.x + (svgPt.x - dragStartSvg.current.x),
-              dragStartState.current.y + (svgPt.y - dragStartSvg.current.y),
-              true
-            );
-          }
+          const moves = (state.selectedIds.size > 1 && state.selectedIds.has(dragStateId.current))
+            ? snapshot.states
+                .filter((s) => state.selectedIds.has(s.id))
+                .map((s) => ({ id: s.id, x: s.x + dx, y: s.y + dy }))
+            : [{ id: dragStateId.current, x: dragStartState.current.x + dx, y: dragStartState.current.y + dy }];
+
+          onCommitDraggedStates(snapshot, moves, snapToGrid);
         }
         isDraggingState.current = false;
         dragStateId.current = null;
         didMoveRef.current = false;
+        dragStartSnapshotRef.current = null;
         return;
       }
 
@@ -353,7 +346,7 @@ export const Canvas: React.FC<CanvasProps> = ({
         setSelectionRect(null);
       }
     },
-    [screenToSvg, snapToGrid, state, onMoveState, onMoveManyStates, onSelectIds, selectionRect, svgRef, transitionDragPreview, onUpdateTransitionGeometry]
+    [screenToSvg, snapToGrid, state, onCommitDraggedStates, onSelectIds, selectionRect, svgRef, transitionDragPreview, onUpdateTransitionGeometry]
   );
 
   const handleStateMouseDown = useCallback(
@@ -384,6 +377,7 @@ export const Canvas: React.FC<CanvasProps> = ({
       dragStartSvg.current = svgPt;
       dragStartState.current = { x: s.x, y: s.y };
       didMoveRef.current = false;
+      dragStartSnapshotRef.current = state;
 
       // Record offsets for group drag
       dragGroupOffsets.current = new Map(

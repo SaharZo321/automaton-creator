@@ -23,8 +23,9 @@ function AppInner() {
     state,
     undo, redo, canUndo, canRedo,
     addState,
-    moveState,
-    moveManyStates,
+    moveStateSilent,
+    moveManyStatesSilent,
+    commitDraggedStates,
     renameState,
     addTransition,
     updateTransition,
@@ -337,8 +338,9 @@ function AppInner() {
           snapToGrid={showGrid}
           svgRef={svgRef}
           onAddState={addState}
-          onMoveState={moveState}
-          onMoveManyStates={moveManyStates}
+          onMoveStateSilent={moveStateSilent}
+          onMoveManyStatesSilent={moveManyStatesSilent}
+          onCommitDraggedStates={commitDraggedStates}
           onSelectIds={selectIds}
           onToggleSelect={toggleSelect}
           onClearSelection={clearSelection}

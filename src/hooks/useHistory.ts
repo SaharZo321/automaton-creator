@@ -19,12 +19,25 @@ export function useHistory(initialState: AutomatonState) {
     setHistory((h) => {
       const next = typeof newState === 'function' ? newState(h.present) : newState;
       const past = [...h.past, h.present].slice(-HISTORY_LIMIT);
-      return {
-        past,
-        present: next,
-        future: [],
-      };
+      return { past, present: next, future: [] };
     });
+  }, []);
+
+  // Update present without adding to history (e.g. live drag preview)
+  const setPresent = useCallback((newState: AutomatonState | ((prev: AutomatonState) => AutomatonState)) => {
+    setHistory((h) => ({
+      ...h,
+      present: typeof newState === 'function' ? newState(h.present) : newState,
+    }));
+  }, []);
+
+  // Commit a drag: explicitly name what goes into past and what becomes present
+  const commitDrag = useCallback((snapshot: AutomatonState, next: AutomatonState) => {
+    setHistory((h) => ({
+      past: [...h.past, snapshot].slice(-HISTORY_LIMIT),
+      present: next,
+      future: [],
+    }));
   }, []);
 
   const undo = useCallback(() => {
@@ -53,6 +66,8 @@ export function useHistory(initialState: AutomatonState) {
   return {
     state: history.present,
     setState,
+    setPresent,
+    commitDrag,
     undo,
     redo,
     canUndo,
