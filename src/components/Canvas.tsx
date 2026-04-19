@@ -357,6 +357,7 @@ export const Canvas: React.FC<CanvasProps> = ({
 
   const handleSvgDoubleClick = useCallback(
     (e: React.MouseEvent<SVGSVGElement>) => {
+      e.preventDefault();
       if (pendingTransitionFrom !== null || isSelectingTransitionSource) return;
       const svgPt = screenToSvg(e.clientX, e.clientY);
       const hit = findStateAt(svgPt);
@@ -364,11 +365,12 @@ export const Canvas: React.FC<CanvasProps> = ({
         onAddState(svgPt.x, svgPt.y, snapToGrid);
       }
     },
-    [screenToSvg, findStateAt, onAddState, snapToGrid]
+    [screenToSvg, findStateAt, onAddState, snapToGrid, pendingTransitionFrom, isSelectingTransitionSource]
   );
 
   const handleStateDoubleClick = useCallback(
     (e: React.MouseEvent, id: string) => {
+      e.preventDefault();
       e.stopPropagation();
       if (justCompletedTransitionRef.current) {
         justCompletedTransitionRef.current = false;
@@ -386,7 +388,7 @@ export const Canvas: React.FC<CanvasProps> = ({
       const screenY = (s.y - viewBox.y) * viewBox.zoom + rect.top;
       onRenameState(id, { x: screenX, y: screenY });
     },
-    [state.states, viewBox, svgRef, onRenameState]
+    [state.states, viewBox, svgRef, onRenameState, pendingTransitionFrom, isSelectingTransitionSource]
   );
 
   const handleTransitionDoubleClick = useCallback(
@@ -436,7 +438,7 @@ export const Canvas: React.FC<CanvasProps> = ({
   } ${containerRef.current ? containerRef.current.clientHeight / viewBox.zoom : 600}`;
 
   return (
-    <div ref={containerRef} className="relative flex-1 overflow-hidden bg-slate-50 dark:bg-slate-900">
+    <div ref={containerRef} className="relative flex-1 overflow-hidden bg-slate-50 dark:bg-slate-900" style={{ userSelect: 'none' }}>
       {state.states.length === 0 && (
         <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
           <div className="flex flex-col items-center gap-3 text-slate-400 dark:text-slate-500 animate-pulse">
@@ -456,7 +458,7 @@ export const Canvas: React.FC<CanvasProps> = ({
         onMouseLeave={handleMouseLeave}
         onDoubleClick={handleSvgDoubleClick}
         onContextMenu={(e) => e.preventDefault()}
-        style={{ cursor: pendingTransitionFrom ? 'crosshair' : 'default' }}
+        style={{ cursor: pendingTransitionFrom ? 'crosshair' : 'default', userSelect: 'none' }}
       >
         <defs>
           <marker
