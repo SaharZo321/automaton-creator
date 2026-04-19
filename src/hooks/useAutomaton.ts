@@ -192,6 +192,18 @@ export function useAutomaton() {
     [setState]
   );
 
+  const updateTransitionGeometry = useCallback(
+    (id: string, updates: { curvature?: number; loopAngle?: number }) => {
+      setState((prev) => ({
+        ...prev,
+        transitions: prev.transitions.map((t) =>
+          t.id === id ? { ...t, ...updates } : t
+        ),
+      }));
+    },
+    [setState]
+  );
+
   const deleteTransitions = useCallback(
     (ids: string[]) => {
       const idSet = new Set(ids);
@@ -396,6 +408,7 @@ export function useAutomaton() {
     toggleAcceptState,
     addTransition,
     updateTransition,
+    updateTransitionGeometry,
     deleteTransitions,
     setType,
     setAlphabet,

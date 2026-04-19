@@ -11,6 +11,7 @@ interface TransitionEdgeProps {
   onDoubleClick: (e: React.MouseEvent, id: string) => void;
   onContextMenu: (e: React.MouseEvent, id: string) => void;
   onClick: (e: React.MouseEvent, id: string) => void;
+  onDragStart: (e: React.MouseEvent, id: string) => void;
 }
 
 export const TransitionEdge: React.FC<TransitionEdgeProps> = ({
@@ -22,11 +23,23 @@ export const TransitionEdge: React.FC<TransitionEdgeProps> = ({
   onDoubleClick,
   onContextMenu,
   onClick,
+  onDragStart,
 }) => {
   const { fromPt, toPt } = getEdgeEndpoints(fromState, toState, curvature);
   const pathD = getEdgePath(fromPt, toPt, curvature);
   const labelPos = getEdgeLabelPosition(fromPt, toPt, curvature);
   const label = transition.symbols.join(', ');
+
+  // Drag handle at bezier midpoint (t=0.5)
+  const edgeDx = toPt.x - fromPt.x;
+  const edgeDy = toPt.y - fromPt.y;
+  const edgeDist = Math.sqrt(edgeDx * edgeDx + edgeDy * edgeDy);
+  const edgePx = edgeDist > 0 ? -edgeDy / edgeDist : 0;
+  const edgePy = edgeDist > 0 ? edgeDx / edgeDist : 0;
+  const edgeMidX = (fromPt.x + toPt.x) / 2;
+  const edgeMidY = (fromPt.y + toPt.y) / 2;
+  const handleX = edgeMidX + 0.5 * edgePx * (curvature * edgeDist * 0.3);
+  const handleY = edgeMidY + 0.5 * edgePy * (curvature * edgeDist * 0.3);
 
   const strokeColor = isSelected ? '#3b82f6' : '#475569';
 
@@ -80,6 +93,23 @@ export const TransitionEdge: React.FC<TransitionEdgeProps> = ({
       >
         {label}
       </text>
+
+      {/* Curve drag handle */}
+      {isSelected && (
+        <circle
+          cx={handleX}
+          cy={handleY}
+          r={5}
+          fill="white"
+          stroke={strokeColor}
+          strokeWidth={1.5}
+          style={{ cursor: 'grab' }}
+          onMouseDown={(e) => {
+            e.stopPropagation();
+            onDragStart(e, transition.id);
+          }}
+        />
+      )}
     </g>
   );
 };

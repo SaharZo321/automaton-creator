@@ -26,10 +26,10 @@ export function getEdgePath(
   return `M ${from.x} ${from.y} Q ${cpX} ${cpY} ${to.x} ${to.y}`;
 }
 
-export function getSelfLoopPath(cx: number, cy: number, rx: number, ry: number = rx): string {
+export function getSelfLoopPath(cx: number, cy: number, rx: number, ry: number = rx, angle: number = -Math.PI / 2): string {
   const loopRadius = ry * 0.9;
-  const startAngle = -Math.PI / 4;
-  const endAngle = -3 * Math.PI / 4;
+  const startAngle = angle + Math.PI / 4;
+  const endAngle = angle - Math.PI / 4;
 
   const startX = cx + rx * Math.cos(startAngle);
   const startY = cy + ry * Math.sin(startAngle);

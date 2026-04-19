@@ -42,6 +42,7 @@ function AppInner() {
     deleteStates,
     deleteTransitions,
     setAlphabet,
+    updateTransitionGeometry,
   } = useAutomaton();
 
   const svgRef = useRef<SVGSVGElement>(null);
@@ -351,6 +352,7 @@ function AppInner() {
             pendingTransitionFrom === '__selecting_source__' ? null : pendingTransitionFrom
           }
           isSelectingTransitionSource={pendingTransitionFrom === '__selecting_source__'}
+          onUpdateTransitionGeometry={updateTransitionGeometry}
           onEditTransition={handleEditTransition}
           onRenameState={handleRenameState}
           onContextMenuState={handleContextMenuState}

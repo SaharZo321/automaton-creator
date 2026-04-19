@@ -63,6 +63,8 @@ export function serializeAutomaton(state: AutomatonState): object {
       from: t.from,
       to: t.to,
       symbols: t.symbols,
+      ...(t.curvature !== undefined && { curvature: t.curvature }),
+      ...(t.loopAngle !== undefined && { loopAngle: t.loopAngle }),
     })),
     alphabet: state.alphabet,
   };
@@ -96,6 +98,8 @@ export function deserializeAutomaton(data: unknown): AutomatonState | null {
       from: String(tr.from ?? ''),
       to: String(tr.to ?? ''),
       symbols: Array.isArray(tr.symbols) ? tr.symbols.map(String) : [],
+      ...(tr.curvature !== undefined && { curvature: Number(tr.curvature) }),
+      ...(tr.loopAngle !== undefined && { loopAngle: Number(tr.loopAngle) }),
     };
   });
 

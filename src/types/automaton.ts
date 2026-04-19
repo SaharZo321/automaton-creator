@@ -14,6 +14,8 @@ export interface Transition {
   from: string;
   to: string;
   symbols: string[];
+  curvature?: number;
+  loopAngle?: number;
 }
 
 export interface AutomatonState {

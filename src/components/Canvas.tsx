@@ -34,6 +34,7 @@ interface CanvasProps {
   viewBox: { x: number; y: number; zoom: number };
   onViewBoxChange: (vb: { x: number; y: number; zoom: number }) => void;
   onFitView: () => void;
+  onUpdateTransitionGeometry: (id: string, updates: { curvature?: number; loopAngle?: number }) => void;
 }
 
 export const Canvas: React.FC<CanvasProps> = ({
@@ -57,6 +58,7 @@ export const Canvas: React.FC<CanvasProps> = ({
   onContextMenuTransition,
   viewBox,
   onViewBoxChange,
+  onUpdateTransitionGeometry,
 }) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const isDraggingState = useRef(false);
@@ -77,6 +79,11 @@ export const Canvas: React.FC<CanvasProps> = ({
 
   const didMoveRef = useRef(false);
   const justCompletedTransitionRef = useRef(false);
+
+  const draggingTransitionRef = useRef<{ id: string; type: 'curve' | 'loop' } | null>(null);
+  const [transitionDragPreview, setTransitionDragPreview] = useState<{
+    id: string; curvature?: number; loopAngle?: number;
+  } | null>(null);
 
   const unreachableIds = getUnreachableIds(state);
 
@@ -193,6 +200,32 @@ export const Canvas: React.FC<CanvasProps> = ({
 
   const handleMouseMove = useCallback(
     (e: React.MouseEvent<SVGSVGElement>) => {
+      // Transition drag
+      if (draggingTransitionRef.current) {
+        const { id, type } = draggingTransitionRef.current;
+        const svgPt = screenToSvg(e.clientX, e.clientY);
+        const t = state.transitions.find((tr) => tr.id === id);
+        if (!t) return;
+        if (type === 'curve') {
+          const from = state.states.find((s) => s.id === t.from);
+          const to = state.states.find((s) => s.id === t.to);
+          if (!from || !to) return;
+          const dx = to.x - from.x;
+          const dy = to.y - from.y;
+          const dist = Math.sqrt(dx * dx + dy * dy);
+          if (dist < 1) return;
+          const px = -dy / dist;
+          const py = dx / dist;
+          const perpDist = (svgPt.x - (from.x + to.x) / 2) * px + (svgPt.y - (from.y + to.y) / 2) * py;
+          setTransitionDragPreview({ id, curvature: perpDist / (dist * 0.15) });
+        } else {
+          const s = state.states.find((st) => st.id === t.from);
+          if (!s) return;
+          setTransitionDragPreview({ id, loopAngle: Math.atan2(svgPt.y - s.y, svgPt.x - s.x) });
+        }
+        return;
+      }
+
       // Pan
       if (isPanning.current) {
         const dx = (e.clientX - panStart.current.x) / viewBox.zoom;
@@ -248,6 +281,20 @@ export const Canvas: React.FC<CanvasProps> = ({
 
   const handleMouseUp = useCallback(
     (e: React.MouseEvent<SVGSVGElement>) => {
+      if (draggingTransitionRef.current) {
+        if (transitionDragPreview) {
+          const { id, curvature, loopAngle } = transitionDragPreview;
+          const updates: { curvature?: number; loopAngle?: number } = {};
+          if (curvature !== undefined) updates.curvature = curvature;
+          if (loopAngle !== undefined) updates.loopAngle = loopAngle;
+          onUpdateTransitionGeometry(id, updates);
+        }
+        draggingTransitionRef.current = null;
+        setTransitionDragPreview(null);
+        if (svgRef.current) svgRef.current.style.cursor = isSpaceDown.current ? 'grab' : 'default';
+        return;
+      }
+
       if (isPanning.current) {
         isPanning.current = false;
         if (svgRef.current) svgRef.current.style.cursor = isSpaceDown.current ? 'grab' : 'default';
@@ -306,7 +353,7 @@ export const Canvas: React.FC<CanvasProps> = ({
         setSelectionRect(null);
       }
     },
-    [screenToSvg, snapToGrid, state, onMoveState, onMoveManyStates, onSelectIds, selectionRect, svgRef]
+    [screenToSvg, snapToGrid, state, onMoveState, onMoveManyStates, onSelectIds, selectionRect, svgRef, transitionDragPreview, onUpdateTransitionGeometry]
   );
 
   const handleStateMouseDown = useCallback(
@@ -417,20 +464,44 @@ export const Canvas: React.FC<CanvasProps> = ({
       dragStateId.current = null;
       didMoveRef.current = false;
     }
+    if (draggingTransitionRef.current) {
+      draggingTransitionRef.current = null;
+      setTransitionDragPreview(null);
+    }
     isPanning.current = false;
     isSelecting.current = false;
     setSelectionRect(null);
   }, []);
 
-  // Determine curvature for parallel edges
-  const getCurvature = (transition: Transition): number => {
-    const reverse = state.transitions.find(
-      (t) => t.from === transition.to && t.to === transition.from
-    );
-    if (reverse) {
-      return 0.4;
+  const handleTransitionCurveDragStart = useCallback(
+    (_e: React.MouseEvent, id: string) => {
+      draggingTransitionRef.current = { id, type: 'curve' };
+      if (svgRef.current) svgRef.current.style.cursor = 'ns-resize';
+    },
+    [svgRef]
+  );
+
+  const handleLoopAngleDragStart = useCallback(
+    (_e: React.MouseEvent, id: string) => {
+      draggingTransitionRef.current = { id, type: 'loop' };
+      if (svgRef.current) svgRef.current.style.cursor = 'grab';
+    },
+    [svgRef]
+  );
+
+  const getEffectiveCurvature = (transition: Transition): number => {
+    if (transitionDragPreview?.id === transition.id && transitionDragPreview.curvature !== undefined) {
+      return transitionDragPreview.curvature;
     }
-    return 0;
+    if (transition.curvature !== undefined) return transition.curvature;
+    return state.transitions.some((t) => t.from === transition.to && t.to === transition.from) ? 0.4 : 0;
+  };
+
+  const getEffectiveLoopAngle = (transition: Transition): number => {
+    if (transitionDragPreview?.id === transition.id && transitionDragPreview.loopAngle !== undefined) {
+      return transitionDragPreview.loopAngle;
+    }
+    return transition.loopAngle ?? -Math.PI / 2;
   };
 
   const svgViewBox = `${viewBox.x} ${viewBox.y} ${
@@ -514,9 +585,11 @@ export const Canvas: React.FC<CanvasProps> = ({
                 transition={t}
                 state={s}
                 isSelected={state.selectedIds.has(t.id)}
+                loopAngle={getEffectiveLoopAngle(t)}
                 onDoubleClick={handleTransitionDoubleClick}
                 onContextMenu={onContextMenuTransition}
                 onClick={handleTransitionClick}
+                onDragStart={handleLoopAngleDragStart}
               />
             );
           })}
@@ -535,10 +608,11 @@ export const Canvas: React.FC<CanvasProps> = ({
                 fromState={from}
                 toState={to}
                 isSelected={state.selectedIds.has(t.id)}
-                curvature={getCurvature(t)}
+                curvature={getEffectiveCurvature(t)}
                 onDoubleClick={handleTransitionDoubleClick}
                 onContextMenu={onContextMenuTransition}
                 onClick={handleTransitionClick}
+                onDragStart={handleTransitionCurveDragStart}
               />
             );
           })}
