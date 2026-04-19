@@ -1,6 +1,7 @@
 import React from 'react';
 import type { Transition, StateNode } from '../../types/automaton';
 import { getEdgePath, getEdgeEndpoints, getEdgeLabelPosition } from '../../lib/geometry';
+import { TransitionLabel } from './TransitionLabel';
 
 interface TransitionEdgeProps {
   transition: Transition;
@@ -8,6 +9,7 @@ interface TransitionEdgeProps {
   toState: StateNode;
   isSelected: boolean;
   curvature: number;
+  enableLatex?: boolean;
   onDoubleClick: (e: React.MouseEvent, id: string) => void;
   onContextMenu: (e: React.MouseEvent, id: string) => void;
   onClick: (e: React.MouseEvent, id: string) => void;
@@ -20,6 +22,7 @@ export const TransitionEdge: React.FC<TransitionEdgeProps> = ({
   toState,
   isSelected,
   curvature,
+  enableLatex = false,
   onDoubleClick,
   onContextMenu,
   onClick,
@@ -67,32 +70,7 @@ export const TransitionEdge: React.FC<TransitionEdgeProps> = ({
         markerEnd={`url(#arrowhead-${isSelected ? 'selected' : 'default'})`}
       />
 
-      {/* Label background */}
-      <rect
-        x={labelPos.x - (label.length * 4 + 6)}
-        y={labelPos.y - 10}
-        width={label.length * 8 + 12}
-        height={20}
-        rx={4}
-        fill="white"
-        className="fill-white dark:fill-slate-900"
-        opacity={0.9}
-      />
-
-      {/* Label text */}
-      <text
-        x={labelPos.x}
-        y={labelPos.y}
-        textAnchor="middle"
-        dominantBaseline="central"
-        fontSize={13}
-        fontFamily="system-ui, sans-serif"
-        fill={isSelected ? '#1d4ed8' : '#334155'}
-        className="fill-slate-700 dark:fill-slate-200"
-        style={{ userSelect: 'none' }}
-      >
-        {label}
-      </text>
+      <TransitionLabel label={label} x={labelPos.x} y={labelPos.y} isSelected={isSelected} enableLatex={enableLatex} />
 
       {/* Curve drag handle */}
       {isSelected && (

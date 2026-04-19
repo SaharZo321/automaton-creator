@@ -2,12 +2,14 @@ import React from 'react';
 import type { Transition, StateNode } from '../../types/automaton';
 import { STATE_RADIUS, getStateRx } from '../../constants';
 import { getSelfLoopPath } from '../../lib/geometry';
+import { TransitionLabel } from './TransitionLabel';
 
 interface SelfLoopProps {
   transition: Transition;
   state: StateNode;
   isSelected: boolean;
   loopAngle: number;
+  enableLatex?: boolean;
   onDoubleClick: (e: React.MouseEvent, id: string) => void;
   onContextMenu: (e: React.MouseEvent, id: string) => void;
   onClick: (e: React.MouseEvent, id: string) => void;
@@ -19,6 +21,7 @@ export const SelfLoop: React.FC<SelfLoopProps> = ({
   state,
   isSelected,
   loopAngle,
+  enableLatex = false,
   onDoubleClick,
   onContextMenu,
   onClick,
@@ -67,32 +70,7 @@ export const SelfLoop: React.FC<SelfLoopProps> = ({
         markerEnd={`url(#arrowhead-${isSelected ? 'selected' : 'default'})`}
       />
 
-      {/* Label background */}
-      <rect
-        x={labelX - (label.length * 4 + 6)}
-        y={labelY - 10}
-        width={label.length * 8 + 12}
-        height={20}
-        rx={4}
-        fill="white"
-        className="fill-white dark:fill-slate-900"
-        opacity={0.9}
-      />
-
-      {/* Label */}
-      <text
-        x={labelX}
-        y={labelY}
-        textAnchor="middle"
-        dominantBaseline="central"
-        fontSize={13}
-        fontFamily="system-ui, sans-serif"
-        fill={isSelected ? '#1d4ed8' : '#334155'}
-        className="fill-slate-700 dark:fill-slate-200"
-        style={{ userSelect: 'none' }}
-      >
-        {label}
-      </text>
+      <TransitionLabel label={label} x={labelX} y={labelY} isSelected={isSelected} enableLatex={enableLatex} />
 
       {/* Loop drag handle */}
       {isSelected && (

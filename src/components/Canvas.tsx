@@ -586,6 +586,7 @@ export const Canvas: React.FC<CanvasProps> = ({
                 state={s}
                 isSelected={state.selectedIds.has(t.id)}
                 loopAngle={getEffectiveLoopAngle(t)}
+                enableLatex={state.type !== 'DFA'}
                 onDoubleClick={handleTransitionDoubleClick}
                 onContextMenu={onContextMenuTransition}
                 onClick={handleTransitionClick}
@@ -609,6 +610,7 @@ export const Canvas: React.FC<CanvasProps> = ({
                 toState={to}
                 isSelected={state.selectedIds.has(t.id)}
                 curvature={getEffectiveCurvature(t)}
+                enableLatex={state.type !== 'DFA'}
                 onDoubleClick={handleTransitionDoubleClick}
                 onContextMenu={onContextMenuTransition}
                 onClick={handleTransitionClick}

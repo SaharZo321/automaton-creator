@@ -96,7 +96,7 @@ export const TransitionEditor: React.FC<TransitionEditorProps> = ({
             )}
           </div>
           <p className="text-xs text-slate-400 dark:text-slate-500 mt-1">
-            Separate multiple symbols with commas
+            Separate with commas.{automatonType !== 'DFA' && <> LaTeX: <span className="font-mono">$\sigma$</span></>}
           </p>
 
           <div className="flex gap-2 mt-3">
