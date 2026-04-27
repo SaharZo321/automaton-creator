@@ -12,6 +12,10 @@ interface GuideModalProps {
   onClose: () => void;
 }
 
+const isMac = typeof navigator !== 'undefined' &&
+  /Mac|iPhone|iPad|iPod/.test(navigator.platform || navigator.userAgent);
+const mod = isMac ? '⌘' : 'Ctrl';
+
 const shortcuts = [
   { category: 'Navigation', items: [
     { keys: ['Two-finger scroll'], desc: 'Pan canvas' },
@@ -27,18 +31,18 @@ const shortcuts = [
     { keys: ['Click + Drag'], desc: 'Move state' },
     { keys: ['Shift + Click'], desc: 'Toggle selection' },
     { keys: ['Click + Drag (empty)'], desc: 'Selection rectangle' },
-    { keys: ['Delete', 'Backspace'], desc: 'Delete selected' },
+    { keys: [isMac ? '⌫' : 'Delete', isMac ? 'Delete' : 'Backspace'], desc: 'Delete selected' },
     { keys: ['T'], desc: 'Toggle transition / select mode' },
-    { keys: ['Ctrl+D'], desc: 'Duplicate selected states' },
+    { keys: [`${mod}+D`], desc: 'Duplicate selected states' },
     { keys: ['Escape'], desc: 'Deselect all' },
     { keys: ['G'], desc: 'Toggle snap-to-grid' },
   ]},
   { category: 'File', items: [
-    { keys: ['Ctrl+Z'], desc: 'Undo' },
-    { keys: ['Ctrl+Shift+Z', 'Ctrl+Y'], desc: 'Redo' },
-    { keys: ['Ctrl+A'], desc: 'Select all' },
-    { keys: ['Ctrl+C'], desc: 'Copy as JSON' },
-    { keys: ['Ctrl+V'], desc: 'Paste from JSON' },
+    { keys: [`${mod}+Z`], desc: 'Undo' },
+    { keys: [`${mod}+Shift+Z`], desc: 'Redo' },
+    { keys: [`${mod}+A`], desc: 'Select all' },
+    { keys: [`${mod}+C`], desc: 'Copy as JSON' },
+    { keys: [`${mod}+V`], desc: 'Paste from JSON' },
     { keys: ['?'], desc: 'Open this guide' },
   ]},
 ];
@@ -49,10 +53,10 @@ const features = [
   { icon: Spline, title: 'Draggable Transitions', desc: 'Select a transition and drag the handle at its midpoint to adjust the curve. Self-loop handles rotate the loop around the state.' },
   { icon: Edit2, title: 'LaTeX Labels', desc: 'State names and transition symbols (in NFA/NFA-ε modes) support LaTeX: wrap in $...$ e.g. $q_0$ or $\\sigma$.' },
   { icon: Type, title: 'Alphabet (Σ)', desc: 'Configure the alphabet via the Σ button in the toolbar. Used to detect missing transitions in DFA mode.' },
-  { icon: MousePointer, title: 'Context Menu', desc: 'Right-click any state to set start, toggle accept, rename, or delete.' },
+  { icon: MousePointer, title: 'Context Menu', desc: 'Right-click (or Ctrl+Click on Mac) any state or transition to set start, toggle accept, rename, or delete.' },
   { icon: Settings, title: 'Auto-Layout', desc: 'Click "Auto-layout" to automatically arrange states using the dagre algorithm.' },
   { icon: Grid, title: 'Snap to Grid', desc: 'Toggle grid snapping with G key or toolbar button for precise placement.' },
-  { icon: Move, title: 'Zoom & Pan', desc: 'Trackpad: two-finger scroll to pan, pinch to zoom. Mouse: scroll wheel zooms, middle-click or Space+drag to pan.' },
+  { icon: Move, title: 'Zoom & Pan', desc: 'Trackpad: two-finger scroll to pan, pinch to zoom. Mouse: Ctrl+scroll or pinch to zoom, middle-click or Space+drag to pan.' },
   { icon: Download, title: 'Export', desc: 'Export as PNG (2x resolution), SVG, or JSON. Import JSON to restore automata.' },
 ];
 
@@ -60,7 +64,7 @@ const tutorial = [
   { step: 1, title: 'Create a state', desc: 'Double-click anywhere on the canvas. A circle appears with name "q0" — this is automatically the start state.' },
   { step: 2, title: 'Name your state', desc: 'Double-click the state to rename it. Try "$q_0$" for LaTeX rendering. The live preview shows how it will look.' },
   { step: 3, title: 'Add more states & transitions', desc: 'Create more states, then click "Add Transition" in the toolbar. Click source state, then destination state. In NFA-ε mode use the ε button to insert epsilon quickly.' },
-  { step: 4, title: 'Set start and accept states', desc: 'Right-click any state to set it as the start state or toggle its accept status (double circle).' },
+  { step: 4, title: 'Set start and accept states', desc: 'Right-click (Ctrl+Click on Mac) any state to set it as the start state or toggle its accept status (double circle).' },
   { step: 5, title: 'Export your automaton', desc: 'Use the Export menu to download as PNG or SVG, or File menu to save/load as JSON.' },
 ];
 
