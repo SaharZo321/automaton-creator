@@ -9,7 +9,7 @@ interface TransitionLabelProps {
   enableLatex?: boolean;
 }
 
-export const TransitionLabel: React.FC<TransitionLabelProps> = ({ label, x, y, isSelected, enableLatex = false }) => {
+export const TransitionLabel: React.FC<TransitionLabelProps> = ({ label, x, y, isSelected, enableLatex = true }) => {
   const hasLatex = enableLatex && isLatex(label);
   const divRef = useRef<HTMLDivElement>(null);
   const [latexBgWidth, setLatexBgWidth] = useState(100);
