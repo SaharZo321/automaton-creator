@@ -49,6 +49,7 @@ const typeLabels: Record<AutomatonType, string> = {
   DFA: 'DFA',
   NFA: 'NFA',
   'NFA-e': 'NFA-ε',
+  PDA: 'PDA',
 };
 
 function TooltipBtn({
@@ -166,7 +167,7 @@ export const Toolbar: React.FC<ToolbarProps> = ({
             sideOffset={6}
           >
             <Select.Viewport>
-              {(['DFA', 'NFA', 'NFA-e'] as AutomatonType[]).map((type) => (
+              {(['DFA', 'NFA', 'NFA-e', 'PDA'] as AutomatonType[]).map((type) => (
                 <Select.Item
                   key={type}
                   value={type}

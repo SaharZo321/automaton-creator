@@ -21,9 +21,12 @@ export const TransitionEditor: React.FC<TransitionEditorProps> = ({
   const [value, setValue] = useState('');
   const inputRef = useRef<HTMLInputElement>(null);
 
+  const isPDA = automatonType === 'PDA';
+  const separator = isPDA ? ';' : ',';
+
   useEffect(() => {
     if (open) {
-      setValue(currentSymbols.join(', '));
+      setValue(currentSymbols.join(isPDA ? '; ' : ', '));
       setTimeout(() => {
         inputRef.current?.focus();
         inputRef.current?.select();
@@ -48,7 +51,7 @@ export const TransitionEditor: React.FC<TransitionEditorProps> = ({
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     const symbols = value
-      .split(',')
+      .split(separator)
       .map((s) => s.trim())
       .filter((s) => s.length > 0);
     if (symbols.length > 0) {
@@ -67,7 +70,7 @@ export const TransitionEditor: React.FC<TransitionEditorProps> = ({
       <div className="bg-white dark:bg-slate-800 rounded-xl shadow-xl border border-slate-200 dark:border-slate-700 p-4 w-60">
         <form onSubmit={handleSubmit}>
           <label className="text-xs font-medium text-slate-500 dark:text-slate-400 block mb-1.5">
-            Transition symbol(s)
+            {isPDA ? 'PDA transition(s) — read, pop / push' : 'Transition symbol(s)'}
           </label>
           <div className="flex gap-1.5 items-center">
             <input
@@ -82,9 +85,9 @@ export const TransitionEditor: React.FC<TransitionEditorProps> = ({
                 }
               }}
               className="flex-1 min-w-0 px-3 py-2 text-sm rounded-lg border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-blue-500"
-              placeholder="a, b, ε"
+              placeholder={isPDA ? 'a, X / Y; b, ε / Z' : 'a, b, ε'}
             />
-            {automatonType === 'NFA-e' && (
+            {(automatonType === 'NFA-e' || isPDA) && (
               <button
                 type="button"
                 onClick={insertEpsilon}
@@ -96,7 +99,11 @@ export const TransitionEditor: React.FC<TransitionEditorProps> = ({
             )}
           </div>
           <p className="text-xs text-slate-400 dark:text-slate-500 mt-1">
-            Separate with commas. LaTeX: <span className="font-mono">$\sigma$</span>
+            {isPDA ? (
+              <>Format: <span className="font-mono">read, pop / push</span>. Separate multiple with <span className="font-mono">;</span>. Use ε for empty.</>
+            ) : (
+              <>Separate with commas. LaTeX: <span className="font-mono">$\sigma$</span></>
+            )}
           </p>
 
           <div className="flex gap-2 mt-3">

@@ -75,7 +75,7 @@ export function deserializeAutomaton(data: unknown): AutomatonState | null {
 
   const obj = data as Record<string, unknown>;
 
-  if (!['DFA', 'NFA', 'NFA-e'].includes(obj.type as string)) return null;
+  if (!['DFA', 'NFA', 'NFA-e', 'PDA'].includes(obj.type as string)) return null;
   if (!Array.isArray(obj.states)) return null;
   if (!Array.isArray(obj.transitions)) return null;
 

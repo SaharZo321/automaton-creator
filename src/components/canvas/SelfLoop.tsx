@@ -1,5 +1,5 @@
 import React from 'react';
-import type { Transition, StateNode } from '../../types/automaton';
+import type { Transition, StateNode, AutomatonType } from '../../types/automaton';
 import { STATE_RADIUS, getStateRx } from '../../constants';
 import { getSelfLoopPath } from '../../lib/geometry';
 import { TransitionLabel } from './TransitionLabel';
@@ -10,6 +10,7 @@ interface SelfLoopProps {
   isSelected: boolean;
   loopAngle: number;
   enableLatex?: boolean;
+  automatonType?: AutomatonType;
   onDoubleClick: (e: React.MouseEvent, id: string) => void;
   onContextMenu: (e: React.MouseEvent, id: string) => void;
   onClick: (e: React.MouseEvent, id: string) => void;
@@ -22,6 +23,7 @@ export const SelfLoop: React.FC<SelfLoopProps> = ({
   isSelected,
   loopAngle,
   enableLatex = false,
+  automatonType,
   onDoubleClick,
   onContextMenu,
   onClick,
@@ -30,7 +32,9 @@ export const SelfLoop: React.FC<SelfLoopProps> = ({
   const rx = getStateRx(state.name);
   const ry = STATE_RADIUS;
   const pathD = getSelfLoopPath(state.x, state.y, rx, ry, loopAngle);
-  const label = transition.symbols.join(', ');
+  const label = automatonType === 'PDA'
+    ? transition.symbols.map((s) => s.replace(/\s*\/\s*/g, ' → ')).join('; ')
+    : transition.symbols.join(', ');
   const strokeColor = isSelected ? '#3b82f6' : '#475569';
 
   // Label position: in the loop direction

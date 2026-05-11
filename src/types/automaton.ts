@@ -1,4 +1,4 @@
-export type AutomatonType = 'DFA' | 'NFA' | 'NFA-e';
+export type AutomatonType = 'DFA' | 'NFA' | 'NFA-e' | 'PDA';
 
 export interface StateNode {
   id: string;

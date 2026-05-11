@@ -1,5 +1,5 @@
 import React from 'react';
-import type { Transition, StateNode } from '../../types/automaton';
+import type { Transition, StateNode, AutomatonType } from '../../types/automaton';
 import { getEdgePath, getEdgeEndpoints, getEdgeLabelPosition } from '../../lib/geometry';
 import { TransitionLabel } from './TransitionLabel';
 
@@ -10,6 +10,7 @@ interface TransitionEdgeProps {
   isSelected: boolean;
   curvature: number;
   enableLatex?: boolean;
+  automatonType?: AutomatonType;
   onDoubleClick: (e: React.MouseEvent, id: string) => void;
   onContextMenu: (e: React.MouseEvent, id: string) => void;
   onClick: (e: React.MouseEvent, id: string) => void;
@@ -23,6 +24,7 @@ export const TransitionEdge: React.FC<TransitionEdgeProps> = ({
   isSelected,
   curvature,
   enableLatex = false,
+  automatonType,
   onDoubleClick,
   onContextMenu,
   onClick,
@@ -31,7 +33,9 @@ export const TransitionEdge: React.FC<TransitionEdgeProps> = ({
   const { fromPt, toPt } = getEdgeEndpoints(fromState, toState, curvature);
   const pathD = getEdgePath(fromPt, toPt, curvature);
   const labelPos = getEdgeLabelPosition(fromPt, toPt, curvature);
-  const label = transition.symbols.join(', ');
+  const label = automatonType === 'PDA'
+    ? transition.symbols.map((s) => s.replace(/\s*\/\s*/g, ' → ')).join('; ')
+    : transition.symbols.join(', ');
 
   // Drag handle at bezier midpoint (t=0.5)
   const edgeDx = toPt.x - fromPt.x;
