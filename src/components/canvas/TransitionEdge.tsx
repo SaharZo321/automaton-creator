@@ -33,9 +33,11 @@ export const TransitionEdge: React.FC<TransitionEdgeProps> = ({
   const { fromPt, toPt } = getEdgeEndpoints(fromState, toState, curvature);
   const pathD = getEdgePath(fromPt, toPt, curvature);
   const labelPos = getEdgeLabelPosition(fromPt, toPt, curvature);
-  const label = automatonType === 'PDA'
-    ? transition.symbols.map((s) => s.replace(/\s*\/\s*/g, ' → ')).join('; ')
-    : transition.symbols.join(', ');
+  const isPDA = automatonType === 'PDA';
+  const separator = isPDA ? ';' : ',';
+  const labels = isPDA
+    ? transition.symbols.map((s) => s.replace(/\s*\/\s*/g, ' → '))
+    : transition.symbols;
 
   // Drag handle at bezier midpoint (t=0.5)
   const edgeDx = toPt.x - fromPt.x;
@@ -74,7 +76,15 @@ export const TransitionEdge: React.FC<TransitionEdgeProps> = ({
         markerEnd={`url(#arrowhead-${isSelected ? 'selected' : 'default'})`}
       />
 
-      <TransitionLabel label={label} x={labelPos.x} y={labelPos.y} isSelected={isSelected} enableLatex={enableLatex} />
+      <TransitionLabel
+        labels={labels}
+        separator={separator}
+        stack={transition.stackVertically ?? false}
+        x={labelPos.x}
+        y={labelPos.y}
+        isSelected={isSelected}
+        enableLatex={enableLatex}
+      />
 
       {/* Curve drag handle */}
       {isSelected && (

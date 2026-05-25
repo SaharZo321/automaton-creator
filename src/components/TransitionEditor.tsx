@@ -5,8 +5,9 @@ interface TransitionEditorProps {
   open: boolean;
   position: { x: number; y: number };
   currentSymbols: string[];
+  currentStackVertically?: boolean;
   automatonType: AutomatonType;
-  onSave: (symbols: string[]) => void;
+  onSave: (symbols: string[], stackVertically: boolean) => void;
   onClose: () => void;
 }
 
@@ -14,11 +15,13 @@ export const TransitionEditor: React.FC<TransitionEditorProps> = ({
   open,
   position,
   currentSymbols,
+  currentStackVertically = false,
   automatonType,
   onSave,
   onClose,
 }) => {
   const [value, setValue] = useState('');
+  const [stackVertically, setStackVertically] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
 
   const isPDA = automatonType === 'PDA';
@@ -27,6 +30,7 @@ export const TransitionEditor: React.FC<TransitionEditorProps> = ({
   useEffect(() => {
     if (open) {
       setValue(currentSymbols.join(isPDA ? '; ' : ', '));
+      setStackVertically(currentStackVertically);
       setTimeout(() => {
         inputRef.current?.focus();
         inputRef.current?.select();
@@ -55,7 +59,7 @@ export const TransitionEditor: React.FC<TransitionEditorProps> = ({
       .map((s) => s.trim())
       .filter((s) => s.length > 0);
     if (symbols.length > 0) {
-      onSave(symbols);
+      onSave(symbols, stackVertically);
     }
     onClose();
   };
@@ -105,6 +109,18 @@ export const TransitionEditor: React.FC<TransitionEditorProps> = ({
               <>Separate with commas. LaTeX: <span className="font-mono">$\sigma$</span></>
             )}
           </p>
+
+          <button
+            type="button"
+            onClick={() => setStackVertically((v) => !v)}
+            title={stackVertically ? 'Switch to horizontal layout' : 'Switch to vertical (stacked) layout'}
+            className="mt-2 w-full flex items-center justify-between gap-2 px-2.5 py-1.5 text-xs rounded-lg border border-slate-200 dark:border-slate-600 bg-slate-50 dark:bg-slate-700 hover:bg-blue-50 hover:border-blue-300 dark:hover:bg-slate-600 text-slate-700 dark:text-slate-300 transition-colors"
+          >
+            <span>Layout: {stackVertically ? 'vertical' : `horizontal (${separator})`}</span>
+            <span className="font-mono text-[10px] leading-tight whitespace-pre text-slate-500 dark:text-slate-400">
+              {stackVertically ? 'a\nb\nc' : `a${separator} b${separator} c`}
+            </span>
+          </button>
 
           <div className="flex gap-2 mt-3">
             <button

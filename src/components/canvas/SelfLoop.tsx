@@ -32,13 +32,18 @@ export const SelfLoop: React.FC<SelfLoopProps> = ({
   const rx = getStateRx(state.name);
   const ry = STATE_RADIUS;
   const pathD = getSelfLoopPath(state.x, state.y, rx, ry, loopAngle);
-  const label = automatonType === 'PDA'
-    ? transition.symbols.map((s) => s.replace(/\s*\/\s*/g, ' → ')).join('; ')
-    : transition.symbols.join(', ');
+  const isPDA = automatonType === 'PDA';
+  const separator = isPDA ? ';' : ',';
+  const labels = isPDA
+    ? transition.symbols.map((s) => s.replace(/\s*\/\s*/g, ' → '))
+    : transition.symbols;
   const strokeColor = isSelected ? '#3b82f6' : '#475569';
 
-  // Label position: in the loop direction
-  const labelDist = STATE_RADIUS + 32;
+  // Label position: in the loop direction. Push further out when stacked so
+  // the multi-line label doesn't overlap the loop arc.
+  const stack = transition.stackVertically ?? false;
+  const extraOffset = stack ? Math.max(0, (transition.symbols.length - 1) * 10) : 0;
+  const labelDist = STATE_RADIUS + 32 + extraOffset;
   const labelX = state.x + labelDist * Math.cos(loopAngle);
   const labelY = state.y + labelDist * Math.sin(loopAngle);
 
@@ -74,7 +79,15 @@ export const SelfLoop: React.FC<SelfLoopProps> = ({
         markerEnd={`url(#arrowhead-${isSelected ? 'selected' : 'default'})`}
       />
 
-      <TransitionLabel label={label} x={labelX} y={labelY} isSelected={isSelected} enableLatex={enableLatex} />
+      <TransitionLabel
+        labels={labels}
+        separator={separator}
+        stack={stack}
+        x={labelX}
+        y={labelY}
+        isSelected={isSelected}
+        enableLatex={enableLatex}
+      />
 
       {/* Loop drag handle */}
       {isSelected && (

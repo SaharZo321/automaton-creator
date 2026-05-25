@@ -218,9 +218,9 @@ function AppInner() {
     setPendingTransitionSymbolFor({ from: fromId, to: toId, position: { x: midX, y: midY } });
   }, [pendingTransitionFrom, state.states, viewBox]);
 
-  const handleSaveTransitionSymbol = useCallback((symbols: string[]) => {
+  const handleSaveTransitionSymbol = useCallback((symbols: string[], stackVertically: boolean) => {
     if (!pendingTransitionSymbolFor) return;
-    addTransition(pendingTransitionSymbolFor.from, pendingTransitionSymbolFor.to, symbols);
+    addTransition(pendingTransitionSymbolFor.from, pendingTransitionSymbolFor.to, symbols, stackVertically);
     setPendingTransitionSymbolFor(null);
     showToast('Transition added');
   }, [pendingTransitionSymbolFor, addTransition, showToast]);
@@ -229,9 +229,9 @@ function AppInner() {
     setEditingTransition({ id, position });
   }, []);
 
-  const handleSaveEditedTransition = useCallback((symbols: string[]) => {
+  const handleSaveEditedTransition = useCallback((symbols: string[], stackVertically: boolean) => {
     if (!editingTransition) return;
-    updateTransition(editingTransition.id, symbols);
+    updateTransition(editingTransition.id, symbols, stackVertically);
     setEditingTransition(null);
   }, [editingTransition, updateTransition]);
 
@@ -291,8 +291,10 @@ function AppInner() {
   const currentRenameStateName =
     renamePopover ? (state.states.find((s) => s.id === renamePopover.id)?.name ?? '') : '';
 
-  const currentEditSymbols =
-    editingTransition ? (state.transitions.find((t) => t.id === editingTransition.id)?.symbols ?? []) : [];
+  const currentEditTransition =
+    editingTransition ? state.transitions.find((t) => t.id === editingTransition.id) : undefined;
+  const currentEditSymbols = currentEditTransition?.symbols ?? [];
+  const currentEditStackVertically = currentEditTransition?.stackVertically ?? false;
 
   return (
     <div className="flex flex-col h-screen bg-slate-50 dark:bg-slate-900 text-slate-900 dark:text-slate-100">
@@ -400,6 +402,7 @@ function AppInner() {
         open={editingTransition !== null}
         position={editingTransition?.position ?? { x: 0, y: 0 }}
         currentSymbols={currentEditSymbols}
+        currentStackVertically={currentEditStackVertically}
         automatonType={state.type}
         onSave={handleSaveEditedTransition}
         onClose={() => setEditingTransition(null)}

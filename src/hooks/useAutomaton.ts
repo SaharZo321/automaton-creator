@@ -160,7 +160,7 @@ export function useAutomaton() {
   );
 
   const addTransition = useCallback(
-    (from: string, to: string, symbols: string[]) => {
+    (from: string, to: string, symbols: string[], stackVertically?: boolean) => {
       setState((prev) => {
         // Merge with existing transition if same from/to
         const existing = prev.transitions.find(
@@ -171,7 +171,9 @@ export function useAutomaton() {
           return {
             ...prev,
             transitions: prev.transitions.map((t) =>
-              t.id === existing.id ? { ...t, symbols: merged } : t
+              t.id === existing.id
+                ? { ...t, symbols: merged, stackVertically: stackVertically ?? t.stackVertically }
+                : t
             ),
           };
         }
@@ -180,6 +182,7 @@ export function useAutomaton() {
           from,
           to,
           symbols,
+          stackVertically,
         };
         return {
           ...prev,
@@ -191,11 +194,11 @@ export function useAutomaton() {
   );
 
   const updateTransition = useCallback(
-    (id: string, symbols: string[]) => {
+    (id: string, symbols: string[], stackVertically?: boolean) => {
       setState((prev) => ({
         ...prev,
         transitions: prev.transitions.map((t) =>
-          t.id === id ? { ...t, symbols } : t
+          t.id === id ? { ...t, symbols, stackVertically } : t
         ),
       }));
     },
