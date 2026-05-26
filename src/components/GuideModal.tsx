@@ -49,10 +49,11 @@ const shortcuts = [
 
 const features = [
   { icon: Plus, title: 'Create States', desc: 'Double-click on empty canvas to create a state. First state becomes the start state automatically.' },
-  { icon: Link, title: 'Add Transitions', desc: 'Click the "Add Transition" button, then click source → destination state. Set the symbol in the popover.' },
+  { icon: Link, title: 'Add Transitions', desc: 'Click the "Add Transition" button, then click source → destination state. Set the symbol or machine action in the popover.' },
   { icon: Spline, title: 'Draggable Transitions', desc: 'Select a transition and drag the handle at its midpoint to adjust the curve. Self-loop handles rotate the loop around the state.' },
   { icon: Edit2, title: 'LaTeX Labels', desc: 'State names and transition symbols (in NFA/NFA-ε modes) support LaTeX: wrap in $...$ e.g. $q_0$ or $\\sigma$.' },
   { icon: Type, title: 'Alphabet (Σ)', desc: 'Configure the alphabet via the Σ button in the toolbar. Used to detect missing transitions in DFA mode.' },
+  { icon: Settings, title: 'Turing Machines', desc: 'TM mode uses transitions like read / write, L/R. Use ⊔ for blank tape cells.' },
   { icon: MousePointer, title: 'Context Menu', desc: 'Right-click (or Ctrl+Click on Mac) any state or transition to set start, toggle accept, rename, or delete.' },
   { icon: Settings, title: 'Auto-Layout', desc: 'Click "Auto-layout" to automatically arrange states using the dagre algorithm.' },
   { icon: Grid, title: 'Snap to Grid', desc: 'Toggle grid snapping with G key or toolbar button for precise placement.' },
@@ -63,7 +64,7 @@ const features = [
 const tutorial = [
   { step: 1, title: 'Create a state', desc: 'Double-click anywhere on the canvas. A circle appears with name "q0" — this is automatically the start state.' },
   { step: 2, title: 'Name your state', desc: 'Double-click the state to rename it. Try "$q_0$" for LaTeX rendering. The live preview shows how it will look.' },
-  { step: 3, title: 'Add more states & transitions', desc: 'Create more states, then click "Add Transition" in the toolbar. Click source state, then destination state. In NFA-ε mode use the ε button to insert epsilon quickly.' },
+  { step: 3, title: 'Add more states & transitions', desc: 'Create more states, then click "Add Transition" in the toolbar. Click source state, then destination state. In NFA-ε mode use the ε button; in TM mode use ⊔ for blank cells.' },
   { step: 4, title: 'Set start and accept states', desc: 'Right-click (Ctrl+Click on Mac) any state to set it as the start state or toggle its accept status (double circle).' },
   { step: 5, title: 'Export your automaton', desc: 'Use the Export menu to download as PNG or SVG, or File menu to save/load as JSON.' },
 ];

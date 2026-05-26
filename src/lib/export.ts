@@ -65,6 +65,7 @@ export function serializeAutomaton(state: AutomatonState): object {
       symbols: t.symbols,
       ...(t.curvature !== undefined && { curvature: t.curvature }),
       ...(t.loopAngle !== undefined && { loopAngle: t.loopAngle }),
+      ...(t.stackVertically !== undefined && { stackVertically: t.stackVertically }),
     })),
     alphabet: state.alphabet,
   };
@@ -75,7 +76,7 @@ export function deserializeAutomaton(data: unknown): AutomatonState | null {
 
   const obj = data as Record<string, unknown>;
 
-  if (!['DFA', 'NFA', 'NFA-e', 'PDA'].includes(obj.type as string)) return null;
+  if (!['DFA', 'NFA', 'NFA-e', 'PDA', 'TM'].includes(obj.type as string)) return null;
   if (!Array.isArray(obj.states)) return null;
   if (!Array.isArray(obj.transitions)) return null;
 
@@ -100,6 +101,7 @@ export function deserializeAutomaton(data: unknown): AutomatonState | null {
       symbols: Array.isArray(tr.symbols) ? tr.symbols.map(String) : [],
       ...(tr.curvature !== undefined && { curvature: Number(tr.curvature) }),
       ...(tr.loopAngle !== undefined && { loopAngle: Number(tr.loopAngle) }),
+      ...(tr.stackVertically !== undefined && { stackVertically: Boolean(tr.stackVertically) }),
     };
   });
 

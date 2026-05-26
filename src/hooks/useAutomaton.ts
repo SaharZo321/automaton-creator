@@ -172,7 +172,7 @@ export function useAutomaton() {
             ...prev,
             transitions: prev.transitions.map((t) =>
               t.id === existing.id
-                ? { ...t, symbols: merged, stackVertically: stackVertically ?? t.stackVertically }
+                ? { ...t, symbols: merged, stackVertically: t.stackVertically ?? stackVertically }
                 : t
             ),
           };

@@ -6,7 +6,8 @@ A single-page web application for visually creating, editing, and exporting fini
 
 ## Features
 
-- **Multiple automaton types** — DFA, NFA, and NFA-ε supported via a toolbar selector
+- **Multiple automaton types** — DFA, NFA, NFA-ε, PDA, and TM supported via a toolbar selector
+- **Turing Machine transitions** — TM mode uses `read / write, L/R` transitions and `⊔` for blank tape cells
 - **Visual SVG canvas** — drag states, draw transitions, create self-loops, pan and zoom
 - **LaTeX state labels** — use `$q_0$`, `$q_{even}$` etc. and see them rendered live with KaTeX
 - **Undo/redo** — full history stack (50 entries) for all actions

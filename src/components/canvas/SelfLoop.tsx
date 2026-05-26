@@ -2,6 +2,7 @@ import React from 'react';
 import type { Transition, StateNode, AutomatonType } from '../../types/automaton';
 import { STATE_RADIUS, getStateRx } from '../../constants';
 import { getSelfLoopPath } from '../../lib/geometry';
+import { formatTransitionLabel, getTransitionSeparator } from '../../lib/transitionFormat';
 import { TransitionLabel } from './TransitionLabel';
 
 interface SelfLoopProps {
@@ -32,11 +33,8 @@ export const SelfLoop: React.FC<SelfLoopProps> = ({
   const rx = getStateRx(state.name);
   const ry = STATE_RADIUS;
   const pathD = getSelfLoopPath(state.x, state.y, rx, ry, loopAngle);
-  const isPDA = automatonType === 'PDA';
-  const separator = isPDA ? ';' : ',';
-  const labels = isPDA
-    ? transition.symbols.map((s) => s.replace(/\s*\/\s*/g, ' → '))
-    : transition.symbols;
+  const separator = automatonType ? getTransitionSeparator(automatonType) : ',';
+  const labels = transition.symbols.map((s) => formatTransitionLabel(automatonType, s));
   const strokeColor = isSelected ? '#3b82f6' : '#475569';
 
   // Label position: in the loop direction. Push further out when stacked so

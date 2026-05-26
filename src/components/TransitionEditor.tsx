@@ -1,5 +1,11 @@
 import React, { useState, useEffect, useRef } from 'react';
 import type { AutomatonType } from '../types/automaton';
+import {
+  BLANK_SYMBOL,
+  EPSILON_SYMBOL,
+  getTransitionSeparator,
+  parseTransitionInput,
+} from '../lib/transitionFormat';
 
 interface TransitionEditorProps {
   open: boolean;
@@ -22,15 +28,21 @@ export const TransitionEditor: React.FC<TransitionEditorProps> = ({
 }) => {
   const [value, setValue] = useState('');
   const [stackVertically, setStackVertically] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
   const isPDA = automatonType === 'PDA';
-  const separator = isPDA ? ';' : ',';
+  const isTM = automatonType === 'TM';
+  const isCompoundTransition = isPDA || isTM;
+  const separator = getTransitionSeparator(automatonType);
+  const emptySymbol = isTM ? BLANK_SYMBOL : EPSILON_SYMBOL;
+  const showEmptySymbolButton = automatonType === 'NFA-e' || isPDA || isTM;
 
   useEffect(() => {
     if (open) {
-      setValue(currentSymbols.join(isPDA ? '; ' : ', '));
+      setValue(currentSymbols.join(isCompoundTransition ? '; ' : ', '));
       setStackVertically(currentStackVertically);
+      setError(null);
       setTimeout(() => {
         inputRef.current?.focus();
         inputRef.current?.select();
@@ -39,12 +51,12 @@ export const TransitionEditor: React.FC<TransitionEditorProps> = ({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open]); // intentionally omit currentSymbols — only reset when editor opens, not on re-renders
 
-  const insertEpsilon = () => {
+  const insertEmptySymbol = () => {
     const input = inputRef.current;
     if (!input) return;
     const start = input.selectionStart ?? value.length;
     const end = input.selectionEnd ?? value.length;
-    const newValue = value.slice(0, start) + 'ε' + value.slice(end);
+    const newValue = value.slice(0, start) + emptySymbol + value.slice(end);
     setValue(newValue);
     setTimeout(() => {
       input.focus();
@@ -54,10 +66,11 @@ export const TransitionEditor: React.FC<TransitionEditorProps> = ({
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    const symbols = value
-      .split(separator)
-      .map((s) => s.trim())
-      .filter((s) => s.length > 0);
+    const { symbols, error: parseError } = parseTransitionInput(automatonType, value);
+    if (parseError) {
+      setError(parseError);
+      return;
+    }
     if (symbols.length > 0) {
       onSave(symbols, stackVertically);
     }
@@ -74,14 +87,17 @@ export const TransitionEditor: React.FC<TransitionEditorProps> = ({
       <div className="bg-white dark:bg-slate-800 rounded-xl shadow-xl border border-slate-200 dark:border-slate-700 p-4 w-60">
         <form onSubmit={handleSubmit}>
           <label className="text-xs font-medium text-slate-500 dark:text-slate-400 block mb-1.5">
-            {isPDA ? 'PDA transition(s) — read, pop / push' : 'Transition symbol(s)'}
+            {isTM ? 'TM transition(s) - read / write, L/R' : isPDA ? 'PDA transition(s) - read, pop / push' : 'Transition symbol(s)'}
           </label>
           <div className="flex gap-1.5 items-center">
             <input
               ref={inputRef}
               type="text"
               value={value}
-              onChange={(e) => setValue(e.target.value)}
+              onChange={(e) => {
+                setValue(e.target.value);
+                if (error) setError(null);
+              }}
               onKeyDown={(e) => {
                 if (e.key === 'Escape') {
                   e.stopPropagation();
@@ -89,22 +105,29 @@ export const TransitionEditor: React.FC<TransitionEditorProps> = ({
                 }
               }}
               className="flex-1 min-w-0 px-3 py-2 text-sm rounded-lg border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-blue-500"
-              placeholder={isPDA ? 'a, X / Y; b, ε / Z' : 'a, b, ε'}
+              placeholder={isTM ? `a / b, R; ${BLANK_SYMBOL} / a, L` : isPDA ? `a, X / Y; b, ${EPSILON_SYMBOL} / Z` : `a, b, ${EPSILON_SYMBOL}`}
             />
-            {(automatonType === 'NFA-e' || isPDA) && (
+            {showEmptySymbolButton && (
               <button
                 type="button"
-                onClick={insertEpsilon}
-                title="Insert ε"
+                onClick={insertEmptySymbol}
+                title={`Insert ${emptySymbol}`}
                 className="px-2.5 py-2 text-sm rounded-lg border border-slate-200 dark:border-slate-600 bg-slate-50 dark:bg-slate-700 hover:bg-blue-50 hover:border-blue-300 dark:hover:bg-slate-600 text-slate-700 dark:text-slate-300 font-medium transition-colors flex-shrink-0"
               >
-                ε
+                {emptySymbol}
               </button>
             )}
           </div>
+          {error && (
+            <p className="text-xs text-rose-500 dark:text-rose-400 mt-1">
+              {error}
+            </p>
+          )}
           <p className="text-xs text-slate-400 dark:text-slate-500 mt-1">
-            {isPDA ? (
-              <>Format: <span className="font-mono">read, pop / push</span>. Separate multiple with <span className="font-mono">;</span>. Use ε for empty.</>
+            {isTM ? (
+              <>Format: <span className="font-mono">read / write, L/R</span>. Separate multiple with <span className="font-mono">;</span>. Use {BLANK_SYMBOL} for blank cells.</>
+            ) : isPDA ? (
+              <>Format: <span className="font-mono">read, pop / push</span>. Separate multiple with <span className="font-mono">;</span>. Use {EPSILON_SYMBOL} for empty.</>
             ) : (
               <>Separate with commas. LaTeX: <span className="font-mono">$\sigma$</span></>
             )}
